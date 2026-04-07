@@ -25,10 +25,10 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var d=document.documentElement;var override=localStorage.getItem('blog-theme-override');var dark=override?override==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;d.setAttribute('data-theme',dark?'dark':'light');d.style.colorScheme=dark?'dark':'light';}catch(e){}})();` }} />
-        <link rel="icon" href="/favicon/favicon-light-32.png" sizes="32x32" media="(prefers-color-scheme: light)" />
-        <link rel="icon" href="/favicon/favicon-dark-32.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
-        <link rel="apple-touch-icon" href="/favicon/favicon-light-180.png" media="(prefers-color-scheme: light)" />
-        <link rel="apple-touch-icon" href="/favicon/favicon-dark-180.png" media="(prefers-color-scheme: dark)" />
+        <link rel="icon" href={site.favicon.light32} sizes="32x32" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href={site.favicon.dark32} sizes="32x32" media="(prefers-color-scheme: dark)" />
+        <link rel="apple-touch-icon" href={site.favicon.light180} media="(prefers-color-scheme: light)" />
+        <link rel="apple-touch-icon" href={site.favicon.dark180} media="(prefers-color-scheme: dark)" />
         <link
           rel="preconnect"
           href="https://cdn-font.hyperos.mi.com"

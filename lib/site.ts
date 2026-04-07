@@ -44,7 +44,14 @@ export interface SiteConfig {
 export function getSiteConfig(): SiteConfig {
   const filePath = path.join(contentDir, "site.json");
   const raw = fs.readFileSync(filePath, "utf8");
-  return JSON.parse(raw) as SiteConfig;
+  const config = JSON.parse(raw) as SiteConfig;
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  // Prepend basePath to all public asset paths so they work on sub-path deployments
+  config.avatar = `${base}${config.avatar}`;
+  for (const key of Object.keys(config.favicon) as (keyof SiteConfig["favicon"])[]) {
+    config.favicon[key] = `${base}${config.favicon[key]}`;
+  }
+  return config;
 }
 
 export interface AboutPageData {
