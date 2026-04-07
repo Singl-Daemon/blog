@@ -1,0 +1,52 @@
+{
+  "name": "blog-singl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fluentui/react-components": "^9.73.7",
+    "@fluentui/react-icons": "^2.0.316",
+    "@fluentui/web-components": "^2.6.1",
+    "@giscus/react": "^3.1.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.38.0",
+    "github-slugger": "^2.0.0",
+    "gray-matter": "^4.0.3",
+    "hastscript": "^9.0.1",
+    "katex": "^0.16.44",
+    "next": "^16.2.2",
+    "next-mdx-remote": "^6.0.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-pretty-code": "^0.14.3",
+    "rehype-slug": "^6.0.0",
+    "remark": "^15.0.1",
+    "remark-directive": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-github-admonitions-to-directives": "^2.1.0",
+    "remark-html": "^16.0.1",
+    "remark-math": "^6.0.0",
+    "shiki": "^4.0.2",
+    "tailwind-merge": "^3.5.0",
+    "unist-util-visit": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.2"
+  }
+}

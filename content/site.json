@@ -1,0 +1,55 @@
+{
+  "title": "Singl的博客",
+  "avatar": "/avatar.jpg",
+  "favicon": {
+    "light32": "/favicon/favicon-light-32.png",
+    "dark32": "/favicon/favicon-dark-32.png",
+    "light180": "/favicon/favicon-light-180.png",
+    "dark180": "/favicon/favicon-dark-180.png",
+    "light192": "/favicon/favicon-light-192.png",
+    "dark192": "/favicon/favicon-dark-192.png"
+  },
+  "author": {
+    "name": "Singl",
+    "bio": "热爱技术的开发者，专注于 C++ 和 Windows 系统开发领域，喜欢分享技术见解和学习心得。",
+    "links": [
+      { "type": "github", "label": "GitHub", "url": "https://github.com/Singl-Daemon" },
+      { "type": "qq", "label": "QQ 群", "url": "https://qm.qq.com/q/Tp7GR3w8s8" },
+      { "type": "email", "label": "Email", "url": "mailto:std@singl.top" }
+    ]
+  },
+  "pages": {
+    "home": {
+      "title": "欢迎",
+      "description": "这是 Singl 的个人博客，记录技术学习与探索的旅程。"
+    },
+    "archive": {
+      "title": "存档",
+      "descriptionTemplate": "记录了 {count} 篇生活与技术的点滴"
+    },
+    "tags": {
+      "title": "标签",
+      "descriptionTemplate": "汇集了 {count} 个技术栈与思绪碎片"
+    },
+    "categories": {
+      "title": "分类",
+      "descriptionTemplate": "共有 {count} 个技术领域与思考空间"
+    },
+    "about": {
+      "title": "关于",
+      "description": "探索技术，记录思考，追寻更好的设计"
+    }
+  },
+  "giscus": {
+    "repo": "Singl-Daemon/blog",
+    "repoId": "R_kgDOR8ONlg",
+    "category": "Announcements",
+    "categoryId": "DIC_kwDOR8ONls4C6Tc8",
+    "mapping": "pathname",
+    "strict": "0",
+    "reactionsEnabled": "1",
+    "emitMetadata": "0",
+    "inputPosition": "top",
+    "lang": "zh-CN"
+  }
+}

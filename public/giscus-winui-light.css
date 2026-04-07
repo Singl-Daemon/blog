@@ -1,0 +1,184 @@
+/*
+ * Giscus WinUI / Fluent Design — Light
+ * Complete Primer variable override for WinUI 11 look.
+ */
+
+main {
+  /* ── Syntax highlighting (prettylights) ── */
+  --color-prettylights-syntax-comment: #6e7781;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity: #6639ba;
+  --color-prettylights-syntax-storage-modifier-import: #24292f;
+  --color-prettylights-syntax-entity-tag: #116329;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-variable: #953800;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-invalid-illegal-text: #f6f8fa;
+  --color-prettylights-syntax-invalid-illegal-bg: #82071e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-italic: #24292f;
+  --color-prettylights-syntax-markup-bold: #24292f;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-ignored-text: #eaeef2;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-brackethighlighter-angle: #57606a;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #8c959f;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+
+  /* ── Foreground / text ── */
+  --color-fg-default: #1a1a1a;
+  --color-fg-muted: #616161;
+  --color-fg-subtle: #8a8a8a;
+
+  /* ── Canvas / backgrounds ── */
+  --color-canvas-default: transparent;
+  --color-canvas-overlay: #ffffff;
+  --color-canvas-inset: #f5f5f5;
+  --color-canvas-subtle: #fafafa;
+
+  /* ── Borders ── */
+  --color-border-default: rgba(0, 0, 0, 0.0578);
+  --color-border-muted: rgba(0, 0, 0, 0.0326);
+  --color-neutral-muted: rgba(0, 0, 0, 0.0578);
+
+  /* ── Accent (WinUI blue) ── */
+  --color-accent-fg: #005fb8;
+  --color-accent-emphasis: #005fb8;
+  --color-accent-muted: rgba(0, 95, 184, 0.4);
+  --color-accent-subtle: rgba(0, 95, 184, 0.08);
+
+  /* ── Status colors ── */
+  --color-success-fg: #0f7b0f;
+  --color-attention-fg: #9d5d00;
+  --color-attention-muted: rgba(157, 93, 0, 0.4);
+  --color-attention-subtle: rgba(157, 93, 0, 0.08);
+  --color-danger-fg: #c42b1c;
+  --color-danger-muted: rgba(196, 43, 28, 0.4);
+  --color-danger-subtle: rgba(196, 43, 28, 0.08);
+
+  /* ── Buttons ── */
+  --color-btn-text: #1a1a1a;
+  --color-btn-bg: #fafafa;
+  --color-btn-border: rgba(0, 0, 0, 0.0578);
+  --color-btn-shadow: 0 1px 0 rgba(0, 0, 0, 0.024);
+  --color-btn-inset-shadow: none;
+  --color-btn-hover-bg: #f0f0f0;
+  --color-btn-hover-border: rgba(0, 0, 0, 0.0578);
+  --color-btn-active-bg: #e8e8e8;
+  --color-btn-active-border: rgba(0, 0, 0, 0.0578);
+  --color-btn-selected-bg: #e8e8e8;
+
+  /* ── Primary button ── */
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #005fb8;
+  --color-btn-primary-border: transparent;
+  --color-btn-primary-shadow: 0 0 transparent;
+  --color-btn-primary-inset-shadow: 0 0 transparent;
+  --color-btn-primary-hover-bg: #005299;
+  --color-btn-primary-hover-border: transparent;
+  --color-btn-primary-selected-bg: #00478a;
+  --color-btn-primary-selected-shadow: 0 0 transparent;
+  --color-btn-primary-disabled-text: rgba(255, 255, 255, 0.6);
+  --color-btn-primary-disabled-bg: rgba(0, 95, 184, 0.4);
+  --color-btn-primary-disabled-border: transparent;
+  --color-btn-counter-bg: rgba(0, 0, 0, 0.06);
+
+  /* ── Controls ── */
+  --color-action-list-item-default-hover-bg: rgba(0, 0, 0, 0.04);
+  --color-segmented-control-bg: #ebebeb;
+  --color-segmented-control-button-bg: #ffffff;
+  --color-segmented-control-button-selected-border: rgba(0, 0, 0, 0.0578);
+
+  /* ── Shadow / focus ── */
+  --color-primer-shadow-inset: inset 0 1px 0 rgba(0, 0, 0, 0.04);
+  --color-primer-shadow-focus: 0 0 0 3px rgba(0, 95, 184, 0.3);
+
+  /* ── Scale tokens for reactions ── */
+  --color-scale-gray-1: #ebebeb;
+  --color-scale-blue-1: rgba(0, 95, 184, 0.12);
+
+  /* ── Reactions ── */
+  --color-social-reaction-bg-hover: var(--color-scale-gray-1);
+  --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-1);
+
+  color-scheme: light;
+}
+
+/* ── Layout overrides ── */
+main .gsc-comment-box {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.0578);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+}
+
+main .gsc-comment-box-textarea {
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.0578);
+  border-bottom-width: 2px;
+  border-bottom-color: rgba(0, 0, 0, 0.14);
+  background: #ffffff;
+  color: #1a1a1a;
+  transition: border-color 0.15s ease;
+}
+
+main .gsc-comment-box-textarea:focus {
+  border-bottom-color: #005fb8;
+  outline: none;
+}
+
+main .gsc-comment {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+main .gsc-comment:hover {
+  background: rgba(0, 0, 0, 0.024);
+  border-color: rgba(0, 0, 0, 0.0326);
+}
+
+main .gsc-header {
+  padding-bottom: 8px;
+}
+
+main .gsc-reactions-button {
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.0578);
+  transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+main .gsc-reply-box,
+main .gsc-comment-box-buttons {
+  border-radius: 8px;
+}
+
+main .gsc-comment-box-bottom button[type="submit"] {
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.1s ease;
+}
+
+main .gsc-timeline {
+  border-left-color: rgba(0, 0, 0, 0.0578);
+}
+
+main .pagination-loader-container {
+  background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line.svg");
+}
+
+main .gsc-loading-image {
+  background-image: url("https://github.githubassets.com/images/mona-loading-default.gif");
+}
