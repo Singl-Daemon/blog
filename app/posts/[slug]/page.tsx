@@ -90,7 +90,7 @@ export default async function Post(props: {
                   },
                 },
               ],
-              [rehypeImagePaths, { slug: params.slug }],
+              [rehypeImagePaths, { slug: params.slug, basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "" }],
             ],
           },
         }}
