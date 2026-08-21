@@ -1,33 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { Avatar, Button, makeStyles, Title3 } from "@fluentui/react-components";
 import {
-  makeStyles,
-  tokens,
-  Button,
-  Avatar,
-  Title3,
-  Tooltip,
-  Menu,
-  MenuTrigger,
-  MenuPopover,
-  MenuList,
-  MenuItemRadio,
-} from "@fluentui/react-components";
-import {
+  Checkmark16Regular,
+  Desktop24Regular,
+  Folder24Regular,
   Home24Regular,
   Library24Regular,
+  Navigation24Regular,
   Person24Regular,
+  Tag24Regular,
   WeatherMoon24Regular,
   WeatherSunny24Regular,
-  Navigation24Regular,
-  Tag24Regular,
-  Folder24Regular,
-  Dismiss24Regular,
-  Desktop24Regular,
 } from "@fluentui/react-icons";
 import Link from "next/link";
-import { useTheme } from "../providers";
+import {
+  type CSSProperties,
+  type ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { useTheme } from "@/app/providers";
 
 const useStyles = makeStyles({
   nav: {
@@ -42,18 +38,19 @@ const useStyles = makeStyles({
     color: "inherit",
     display: "block",
     width: "100%",
+    overflow: "hidden",
   },
-  // Single unified nav button — icon position is always identical.
-  // Text visibility is controlled purely via inline CSS transitions.
   navButton: {
     justifyContent: "flex-start",
-    // minWidth:0 overrides Fluent UI's default 96px so the button respects width:100%
-    // in collapsed mode (content area = 44px). paddingLeft:10px centers a 24px icon
-    // symmetrically: 10px gap left + 24px icon + 10px gap right = 44px.
     minWidth: "0px",
     paddingLeft: "10px",
+    paddingRight: "10px",
+    columnGap: "0px",
     height: "44px",
     width: "100%",
+    overflow: "hidden",
+    flexWrap: "nowrap",
+    boxSizing: "border-box",
     transitionProperty: "transform",
     transitionDuration: "0.3s",
     transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -63,7 +60,6 @@ const useStyles = makeStyles({
       transitionTimingFunction: "ease-in",
     },
   },
-  // Toggle / close button with WinUI horizontal-squish on press.
   toggleBtn: {
     width: "44px",
     height: "44px",
@@ -88,6 +84,7 @@ interface SidebarProps {
   onClose: () => void;
   onToggleDesktop: () => void;
   isDesktopExpanded: boolean;
+  allowMotion: boolean;
   siteTitle: string;
   authorName: string;
   authorAvatar: string;
@@ -98,6 +95,7 @@ export default function Sidebar({
   onClose,
   onToggleDesktop,
   isDesktopExpanded,
+  allowMotion,
   siteTitle,
   authorName,
   authorAvatar,
@@ -105,237 +103,381 @@ export default function Sidebar({
   const styles = useStyles();
   const { theme, isOverride, setTheme, resetTheme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
+  const [skipWidth, setSkipWidth] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
+  const [themePos, setThemePos] = useState({ top: 0, left: 0 });
+  const themeBtnRef = useRef<HTMLDivElement>(null);
+  const themePopoverRef = useRef<HTMLDivElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  const isMobileRef = useRef(false);
+  onCloseRef.current = onClose;
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    isMobileRef.current = mq.matches;
+    setIsMobile(mq.matches);
+
+    const onChange = () => {
+      const mobile = mq.matches;
+      if (mobile === isMobileRef.current) return;
+      isMobileRef.current = mobile;
+      setSkipWidth(true);
+      setIsMobile(mobile);
+      if (!mobile) onCloseRef.current();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setSkipWidth(false));
+      });
+    };
+
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    setPortalReady(true);
   }, []);
 
   const showText = isDesktopExpanded || isMobile;
+  const skipMotion = !allowMotion;
+  const fluentEase = "0.4s cubic-bezier(0.16, 1, 0.3, 1)";
+  const offScreen = isMobile && !isOpen;
+  const themeLabel = !isOverride
+    ? "跟随系统"
+    : theme === "dark"
+      ? "暗色模式"
+      : "亮色模式";
+  const themeValue = !isOverride ? "system" : theme;
 
-  // Always 18px horizontal padding so the icon button never shifts position.
-  // Collapsed: 80px − 18px×2 = 44px content area = exact icon button size.
-  // Expanded:  300px − 18px×2 = 264px content area.
-  const sidebarStyle: React.CSSProperties = {
+  useLayoutEffect(() => {
+    if (!themeOpen) return;
+    let raf = 0;
+    const place = () => {
+      const anchorEl = themeBtnRef.current;
+      const menuEl = themePopoverRef.current;
+      if (!anchorEl || !menuEl) {
+        raf = window.requestAnimationFrame(place);
+        return;
+      }
+      const anchor = anchorEl.getBoundingClientRect();
+      const mw = menuEl.offsetWidth;
+      const mh = menuEl.offsetHeight;
+      const pad = 8;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = anchor.right + 8;
+      let top = anchor.top;
+      if (left + mw > vw - pad) left = anchor.left - mw - 8;
+      if (left < pad) left = pad;
+      if (top + mh > vh - pad) top = anchor.bottom - mh;
+      if (top < pad) top = pad;
+      if (top + mh > vh - pad) top = Math.max(pad, vh - mh - pad);
+      setThemePos((prev) =>
+        prev.top === top && prev.left === left ? prev : { top, left },
+      );
+      raf = window.requestAnimationFrame(place);
+    };
+    place();
+    return () => window.cancelAnimationFrame(raf);
+  }, [themeOpen]);
+
+  useEffect(() => {
+    if (!themeOpen) return;
+    const onDown = (event: PointerEvent) => {
+      const node = event.target as Node;
+      if (
+        themeBtnRef.current?.contains(node) ||
+        themePopoverRef.current?.contains(node)
+      ) {
+        return;
+      }
+      setThemeOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setThemeOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [themeOpen]);
+
+  const sidebarStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    paddingTop: "24px",
-    paddingRight: "18px",
+    paddingTop: isMobile ? "32px" : "24px",
+    paddingRight: showText ? "18px" : "14px",
     paddingBottom: "32px",
-    paddingLeft: "18px",
+    paddingLeft: showText ? "18px" : "14px",
     background: "var(--color-surface)",
     backdropFilter: "blur(20px) saturate(150%)",
     WebkitBackdropFilter: "blur(20px) saturate(150%)",
     height: "100vh",
     position: isMobile ? "fixed" : "sticky",
+    left: 0,
     top: 0,
     gap: "24px",
-    transition:
-      "width 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+    transition: skipMotion
+      ? "none"
+      : [
+          skipWidth ? null : `width ${fluentEase}`,
+          skipWidth ? null : `padding ${fluentEase}`,
+          "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        ]
+          .filter(Boolean)
+          .join(", "),
     borderRight: "1px solid var(--color-border)",
     zIndex: 1000,
     boxSizing: "border-box",
     overflowY: "auto",
     overflowX: "hidden",
-    width: isMobile ? "280px" : isDesktopExpanded ? "300px" : "80px",
-    transform: isMobile
-      ? isOpen
-        ? "translateX(0)"
-        : "translateX(-100%)"
-      : "none",
-    boxShadow: isMobile && isOpen ? "4px 0 24px rgba(0,0,0,0.15)" : "none",
+    width: isMobile ? "280px" : isDesktopExpanded ? "300px" : "72px",
+    transform: offScreen ? "translateX(-100%)" : "none",
+    boxShadow:
+      isMobile && isOpen
+        ? "4px 0 24px rgba(0,0,0,0.15)"
+        : "0 0 0 0 rgba(0,0,0,0)",
   };
 
-  // Text clip wrapper: collapses to 0 on sidebar close, expands with a slight delay on open.
-  // Using two nested spans so the paddingLeft for spacing is clipped along with the content.
-  const textClipStyle: React.CSSProperties = {
+  const textClipStyle: CSSProperties = {
     display: "inline-block",
     overflow: "hidden",
+    minWidth: 0,
     maxWidth: showText ? "220px" : "0px",
     opacity: showText ? 1 : 0,
-    transition: showText
-      ? "max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, opacity 0.25s ease 0.12s"
-      : "max-width 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.12s ease",
+    flexShrink: 1,
+    transition: skipMotion
+      ? "none"
+      : `max-width ${fluentEase}, opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1)`,
   };
 
   const renderNavButton = (
-    icon: React.ReactElement,
+    icon: ReactElement,
     text: string,
-    onClick?: () => void,
-  ) => {
-    const button = (
-      <Button
-        icon={icon}
-        appearance="subtle"
-        className={styles.navButton}
-        onClick={onClick}
-        aria-label={text}
-      >
-        {/* Outer span clips; inner span carries spacing so margin is also clipped to 0 */}
-        <span style={textClipStyle}>
-          <span
-            style={{
-              display: "block",
-              paddingLeft: "12px",
-              whiteSpace: "nowrap",
-              fontSize: "15px",
-              fontWeight: 500,
-            }}
-          >
-            {text}
-          </span>
+    {
+      onClick,
+      asSpan = false,
+    }: { onClick?: () => void; asSpan?: boolean } = {},
+  ) => (
+    <Button
+      as={(asSpan ? "span" : "button") as "button"}
+      icon={icon}
+      appearance="subtle"
+      className={`${styles.navButton} sidebar-nav-btn${showText ? "" : " is-icon-only"}`}
+      onClick={onClick}
+      aria-label={text}
+      role={asSpan ? "presentation" : undefined}
+      tabIndex={asSpan ? -1 : undefined}
+    >
+      <span className="sidebar-nav-text" style={textClipStyle}>
+        <span
+          style={{
+            display: "block",
+            paddingLeft: "12px",
+            whiteSpace: "nowrap",
+            fontSize: "15px",
+            fontWeight: 500,
+          }}
+        >
+          {text}
         </span>
-      </Button>
-    );
+      </span>
+    </Button>
+  );
 
-    if (!showText) {
-      return (
-        <Tooltip content={text} relationship="label" positioning="after">
-          {button}
-        </Tooltip>
-      );
-    }
-    return button;
+  const applyTheme = (value: "light" | "dark" | "system") => {
+    if (value === "system") resetTheme();
+    else setTheme(value);
+    setThemeOpen(false);
+    if (isMobile) onClose();
   };
 
-  return (
-    <aside style={sidebarStyle}>
-      {/* Toggle button — anchored to the left edge, never participates in the width animation */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          height: "44px",
-          marginBottom: "8px",
-          flexShrink: 0,
-        }}
-      >
-        {isMobile ? (
-          <Button
-            appearance="subtle"
-            icon={<Dismiss24Regular style={{ fontSize: "28px" }} />}
-            className={styles.toggleBtn}
-            onClick={onClose}
-            aria-label="Close menu"
-          />
-        ) : (
-          <Button
-            appearance="subtle"
-            icon={<Navigation24Regular style={{ fontSize: "28px" }} />}
-            className={styles.toggleBtn}
-            onClick={onToggleDesktop}
-            aria-label="Toggle sidebar"
-          />
-        )}
-      </div>
+  const themeItems = [
+    { value: "light" as const, label: "亮色", icon: <WeatherSunny24Regular /> },
+    { value: "dark" as const, label: "暗色", icon: <WeatherMoon24Regular /> },
+    {
+      value: "system" as const,
+      label: "跟随系统",
+      icon: <Desktop24Regular />,
+    },
+  ];
 
-      {showText && (
+  return (
+    <aside
+      ref={asideRef}
+      className={`blog-sidebar${isOpen ? " is-open" : ""}${skipMotion ? " no-motion" : ""}${showText ? "" : " is-collapsed"}`}
+      style={sidebarStyle}
+      aria-hidden={isMobile && !isOpen}
+      inert={isMobile && !isOpen ? true : undefined}
+    >
+      {!isMobile ? (
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
-            gap: "16px",
-            transition: "opacity 0.3s",
-            marginTop: "16px",
+            justifyContent: "flex-start",
+            height: "44px",
+            marginBottom: "8px",
             flexShrink: 0,
+            width: "100%",
           }}
         >
-          <div
-            style={{
-              width: "120px",
-              height: "120px",
-              flexShrink: 0,
-              borderRadius: "50%",
-              overflow: "hidden",
-            }}
-          >
-            <Avatar name={authorName} image={{ src: authorAvatar }} size={120} />
-          </div>
-          <Title3
-            style={{ whiteSpace: "nowrap", fontSize: "18px", fontWeight: 700 }}
-          >
-            {siteTitle}
-          </Title3>
+          <Button
+            appearance="subtle"
+            icon={<Navigation24Regular fontSize={28} />}
+            className={`${styles.toggleBtn}${showText ? "" : " is-icon-only"}`}
+            onClick={onToggleDesktop}
+            aria-label={isDesktopExpanded ? "折叠侧边栏" : "展开侧边栏"}
+          />
         </div>
-      )}
+      ) : null}
+
+      <div
+        className="sidebar-profile"
+        aria-hidden={!showText}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "16px",
+          flexShrink: 0,
+          maxHeight: showText ? "220px" : "0px",
+          opacity: showText ? 1 : 0,
+          overflow: "hidden",
+          pointerEvents: showText ? "auto" : "none",
+          marginTop: showText ? "16px" : "0px",
+          transition: skipMotion
+            ? "none"
+            : `max-height ${fluentEase}, opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin-top ${fluentEase}`,
+        }}
+      >
+        <div
+          style={{
+            width: "120px",
+            height: "120px",
+            flexShrink: 0,
+            borderRadius: "50%",
+            overflow: "hidden",
+          }}
+        >
+          <Avatar name={authorName} image={{ src: authorAvatar }} size={120} />
+        </div>
+        <Title3
+          style={{ whiteSpace: "nowrap", fontSize: "18px", fontWeight: 700 }}
+        >
+          {siteTitle}
+        </Title3>
+      </div>
 
       <nav className={styles.nav}>
-        <Link href="/" className={styles.link}>
-          {renderNavButton(
-            <Home24Regular />,
-            "主页 / Home",
-            isMobile ? onClose : undefined,
-          )}
+        <Link
+          href="/"
+          className={styles.link}
+          title={showText ? undefined : "主页"}
+          onClick={isMobile ? onClose : undefined}
+        >
+          {renderNavButton(<Home24Regular />, "主页", { asSpan: true })}
         </Link>
-        <Link href="/archive" className={styles.link}>
-          {renderNavButton(
-            <Library24Regular />,
-            "归档 / Archive",
-            isMobile ? onClose : undefined,
-          )}
+        <Link
+          href="/archive"
+          className={styles.link}
+          title={showText ? undefined : "归档"}
+          onClick={isMobile ? onClose : undefined}
+        >
+          {renderNavButton(<Library24Regular />, "归档", { asSpan: true })}
         </Link>
-        <Link href="/tags" className={styles.link}>
-          {renderNavButton(
-            <Tag24Regular />,
-            "标签 / Tags",
-            isMobile ? onClose : undefined,
-          )}
+        <Link
+          href="/tags"
+          className={styles.link}
+          title={showText ? undefined : "标签"}
+          onClick={isMobile ? onClose : undefined}
+        >
+          {renderNavButton(<Tag24Regular />, "标签", { asSpan: true })}
         </Link>
-        <Link href="/categories" className={styles.link}>
-          {renderNavButton(
-            <Folder24Regular />,
-            "分类 / Categories",
-            isMobile ? onClose : undefined,
-          )}
+        <Link
+          href="/categories"
+          className={styles.link}
+          title={showText ? undefined : "分类"}
+          onClick={isMobile ? onClose : undefined}
+        >
+          {renderNavButton(<Folder24Regular />, "分类", { asSpan: true })}
         </Link>
-        <Link href="/about" className={styles.link}>
-          {renderNavButton(
-            <Person24Regular />,
-            "关于 / About",
-            isMobile ? onClose : undefined,
-          )}
+        <Link
+          href="/about"
+          className={styles.link}
+          title={showText ? undefined : "关于"}
+          onClick={isMobile ? onClose : undefined}
+        >
+          {renderNavButton(<Person24Regular />, "关于", { asSpan: true })}
         </Link>
       </nav>
 
-      <div style={{ marginTop: "auto" }}>
-        <Menu
-          checkedValues={{ theme: [!isOverride ? "system" : theme] }}
-          onCheckedValueChange={(_, { checkedItems }) => {
-            const val = checkedItems[0] as "light" | "dark" | "system";
-            if (val === "system") resetTheme();
-            else setTheme(val);
-            if (isMobile) onClose();
+      <div
+        style={{
+          marginTop: "auto",
+          width: "100%",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          ref={themeBtnRef}
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: showText ? "stretch" : "center",
           }}
-          positioning="after-top"
         >
-          <MenuTrigger disableButtonEnhancement>
-            {renderNavButton(
-              !isOverride
-                ? <Desktop24Regular />
-                : theme === "dark"
-                  ? <WeatherMoon24Regular />
-                  : <WeatherSunny24Regular />,
-              !isOverride ? "跟随系统" : theme === "dark" ? "暗色模式" : "亮色模式",
-            )}
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <MenuItemRadio name="theme" value="light" icon={<WeatherSunny24Regular />}>
-                亮色
-              </MenuItemRadio>
-              <MenuItemRadio name="theme" value="dark" icon={<WeatherMoon24Regular />}>
-                暗色
-              </MenuItemRadio>
-              <MenuItemRadio name="theme" value="system" icon={<Desktop24Regular />}>
-                跟随系统
-              </MenuItemRadio>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
+          {renderNavButton(
+            !isOverride ? (
+              <Desktop24Regular />
+            ) : theme === "dark" ? (
+              <WeatherMoon24Regular />
+            ) : (
+              <WeatherSunny24Regular />
+            ),
+            themeLabel,
+            { onClick: () => setThemeOpen((prev) => !prev) },
+          )}
+        </div>
       </div>
+
+      {portalReady
+        ? createPortal(
+            <div
+              ref={themePopoverRef}
+              className={`theme-menu-popover${themeOpen ? " is-open" : ""}`}
+              style={{ top: themePos.top, left: themePos.left }}
+              role="menu"
+              aria-hidden={!themeOpen}
+            >
+              {themeItems.map((item) => {
+                const checked = themeValue === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={checked}
+                    className="theme-menu-item"
+                    tabIndex={themeOpen ? 0 : -1}
+                    onClick={() => applyTheme(item.value)}
+                  >
+                    <span className="theme-menu-check" aria-hidden>
+                      {checked ? <Checkmark16Regular /> : null}
+                    </span>
+                    {item.icon}
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>,
+            document.body,
+          )
+        : null}
     </aside>
   );
 }

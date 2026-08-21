@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 interface RepoData {
   description: string | null;
@@ -13,7 +13,7 @@ interface RepoData {
 
 interface GithubCardProps {
   repo?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function GithubCard({ repo }: GithubCardProps) {
@@ -22,7 +22,7 @@ export function GithubCard({ repo }: GithubCardProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!repo || !repo.includes("/")) return;
+    if (!repo?.includes("/")) return;
     fetch(`https://api.github.com/repos/${repo}`, {
       referrerPolicy: "no-referrer",
     })
@@ -37,7 +37,7 @@ export function GithubCard({ repo }: GithubCardProps) {
       });
   }, [repo]);
 
-  if (!repo || !repo.includes("/")) {
+  if (!repo?.includes("/")) {
     return null;
   }
 

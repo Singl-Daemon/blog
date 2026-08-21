@@ -1,33 +1,25 @@
 "use client";
 
-import React from "react";
 import {
-  makeStyles,
-  tokens,
-  Title1,
-  Title3,
+  Badge,
   Body1,
   Caption1,
-  Divider,
-  Badge,
+  makeStyles,
+  Title3,
+  tokens,
 } from "@fluentui/react-components";
 import {
   Calendar24Regular,
   DocumentText24Regular,
 } from "@fluentui/react-icons";
+import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { FadeIn, staggerContainer, staggerItem } from "../components/FadeIn";
+import type { CSSProperties } from "react";
+import { PageHeader } from "@/app/components/PageHeader";
+import { formatDateCompact } from "@/lib/date";
+import type { PostMeta } from "@/lib/posts";
 
 const useStyles = makeStyles({
-  container: {
-    display: "flex",
-    maxWidth: "840px",
-    margin: "0 auto",
-    flexDirection: "column",
-    gap: "36px",
-    width: "100%",
-  },
   yearGroup: {
     display: "flex",
     flexDirection: "column",
@@ -67,18 +59,8 @@ const useStyles = makeStyles({
     padding: "14px 16px",
     borderRadius: "8px",
     backgroundColor: "transparent",
-    transitionProperty: "background-color, border-color",
-    transitionDuration: "0.15s",
-    transitionTimingFunction: "ease",
-    border: `1px solid transparent`,
+    border: "1px solid transparent",
     cursor: "pointer",
-    ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-      borderTopColor: tokens.colorNeutralStroke2,
-      borderRightColor: tokens.colorNeutralStroke2,
-      borderBottomColor: tokens.colorNeutralStroke2,
-      borderLeftColor: tokens.colorNeutralStroke2,
-    },
   },
   date: {
     minWidth: "70px",
@@ -91,11 +73,6 @@ const useStyles = makeStyles({
     textDecoration: "none",
     color: "inherit",
     outline: "none",
-  },
-  count: {
-    color: tokens.colorNeutralForeground3,
-    fontSize: "16px",
-    fontWeight: 500,
   },
   postTitle: {
     fontWeight: 500,
@@ -113,21 +90,20 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground3,
     border: `1px solid ${tokens.colorNeutralStroke3}`,
   },
-  headerArea: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    alignItems: "flex-start",
-    textAlign: "left" as const,
-    marginBottom: "20px",
-  },
 });
 
-export default function ArchiveClient({ posts, pageTitle, pageDescription }: { posts: any[]; pageTitle: string; pageDescription: string }) {
+export default function ArchiveClient({
+  posts,
+  pageTitle,
+  pageDescription,
+}: {
+  posts: PostMeta[];
+  pageTitle: string;
+  pageDescription: string;
+}) {
   const styles = useStyles();
 
-  // Group by year
-  const grouped = posts.reduce((acc: Record<string, any[]>, post) => {
+  const grouped = posts.reduce<Record<string, PostMeta[]>>((acc, post) => {
     const year = new Date(post.published).getFullYear().toString();
     if (!acc[year]) acc[year] = [];
     acc[year].push(post);
@@ -137,25 +113,15 @@ export default function ArchiveClient({ posts, pageTitle, pageDescription }: { p
   const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
 
   return (
-    <div className={styles.container}>
-      <FadeIn yOffset={30}>
-        <div className={styles.headerArea}>
-          <Title1 style={{ fontSize: "36px", letterSpacing: "-0.02em" }}>
-            {pageTitle}
-          </Title1>
-          <Caption1 className={styles.count}>
-            {pageDescription}
-          </Caption1>
-        </div>
-        <Divider style={{ opacity: 0.6 }} />
-      </FadeIn>
+    <div className="page-shell">
+      <PageHeader title={pageTitle} description={pageDescription} />
 
-      <motion.div variants={staggerContainer} initial="hidden" animate="show">
+      <div>
         {years.map((year, index) => (
-          <motion.div
+          <div
             key={year}
-            variants={staggerItem}
-            className={styles.yearGroup}
+            className={`${styles.yearGroup} stagger-in-item`}
+            style={{ ["--i" as string]: index } as CSSProperties}
           >
             <div className={styles.yearDot} />
             {index !== years.length - 1 && <div className={styles.yearLine} />}
@@ -169,31 +135,30 @@ export default function ArchiveClient({ posts, pageTitle, pageDescription }: { p
               {year}
             </Title3>
             <div className={styles.postList}>
-              {grouped[year].map((post: any) => (
+              {grouped[year].map((post) => (
                 <Link
                   key={post.slug}
                   href={`/posts/${post.slug}`}
                   className={styles.link}
                 >
-                  <div className={styles.postItem}>
+                  <div className={`${styles.postItem} soft-hover`}>
                     <div className={styles.date}>
-                      <Calendar24Regular style={{ fontSize: 16 }} />
+                      <Calendar24Regular fontSize={16} />
                       <Caption1
                         style={{
                           fontSize: "14px",
-                          fontFamily: "Cascadia Code, Consolas, monospace",
+                          fontFamily: "var(--font-mono)",
                         }}
                       >
-                        {new Date(post.published).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}
+                        {formatDateCompact(post.published)}
                       </Caption1>
                     </div>
                     {post.image ? (
-                      <img
+                      <Image
                         src={post.image}
                         alt={post.title}
+                        width={48}
+                        height={48}
                         className={styles.postThumb}
                       />
                     ) : (
@@ -214,7 +179,7 @@ export default function ArchiveClient({ posts, pageTitle, pageDescription }: { p
                       </div>
                     )}
                     <Body1 className={styles.postTitle}>{post.title}</Body1>
-                    <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                    <div className="archive-post-tags">
                       {post.tags?.slice(0, 2).map((tag: string) => (
                         <Badge
                           key={tag}
@@ -231,9 +196,9 @@ export default function ArchiveClient({ posts, pageTitle, pageDescription }: { p
                 </Link>
               ))}
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }

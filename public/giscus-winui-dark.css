@@ -74,7 +74,7 @@ main {
   --color-btn-shadow: 0 0 transparent;
   --color-btn-inset-shadow: 0 0 transparent;
   --color-btn-hover-bg: #3d3d3d;
-  --color-btn-hover-border: rgba(255, 255, 255, 0.0930);
+  --color-btn-hover-border: rgba(255, 255, 255, 0.093);
   --color-btn-active-bg: #2a2a2a;
   --color-btn-active-border: rgba(255, 255, 255, 0.0698);
   --color-btn-selected-bg: #2a2a2a;
@@ -142,7 +142,9 @@ main .gsc-comment-box-textarea:focus {
 main .gsc-comment {
   border-radius: 8px;
   border: 1px solid transparent;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 main .gsc-comment:hover {
@@ -157,7 +159,9 @@ main .gsc-header {
 main .gsc-reactions-button {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.0698);
-  transition: background 0.1s ease, border-color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease;
 }
 
 main .gsc-reply-box,

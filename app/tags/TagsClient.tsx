@@ -1,39 +1,17 @@
 "use client";
 
-import React from "react";
-import {
-  makeStyles,
-  tokens,
-  Title1,
-  Caption1,
-  Divider,
-} from "@fluentui/react-components";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { FadeIn, staggerContainer, staggerItem } from "../components/FadeIn";
+import { makeStyles, tokens } from "@fluentui/react-components";
 import { Tag24Regular } from "@fluentui/react-icons";
+import Link from "next/link";
+import type { CSSProperties } from "react";
+import { PageHeader } from "@/app/components/PageHeader";
+import type { NamedCount } from "@/lib/posts";
 
 const useStyles = makeStyles({
-  container: {
-    display: "flex",
-    maxWidth: "840px",
-    margin: "0 auto",
-    flexDirection: "column",
-    gap: "36px",
-    width: "100%",
-  },
-  headerArea: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    alignItems: "flex-start",
-    textAlign: "left" as const,
-    marginBottom: "20px",
-  },
   tagCloud: {
     display: "flex",
     flexWrap: "wrap",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     gap: "16px",
   },
   tagLink: {
@@ -51,8 +29,8 @@ const useStyles = makeStyles({
     boxShadow: tokens.shadow2,
     cursor: "pointer",
     ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-      boxShadow: tokens.shadow8,
+      backgroundColor: "var(--hover-fill)",
+      boxShadow: tokens.shadow4,
       borderTopColor: tokens.colorBrandStroke1,
       borderRightColor: tokens.colorBrandStroke1,
       borderBottomColor: tokens.colorBrandStroke1,
@@ -63,12 +41,19 @@ const useStyles = makeStyles({
     fontWeight: 600,
   },
   tagCount: {
-    padding: "2px 8px",
+    minWidth: "22px",
+    height: "22px",
+    padding: "0 7px",
     borderRadius: "100px",
     backgroundColor: tokens.colorBrandBackground2,
     color: tokens.colorBrandForeground2,
     fontSize: "12px",
     fontWeight: 700,
+    lineHeight: "22px",
+    textAlign: "center",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
@@ -77,35 +62,18 @@ export default function TagsClient({
   pageTitle,
   pageDescription,
 }: {
-  tags: { name: string; count: number }[];
+  tags: NamedCount[];
   pageTitle: string;
   pageDescription: string;
 }) {
   const styles = useStyles();
 
   return (
-    <div className={styles.container}>
-      <FadeIn yOffset={30}>
-        <div className={styles.headerArea}>
-          <Title1 style={{ fontSize: "36px", letterSpacing: "-0.02em" }}>
-            {pageTitle}
-          </Title1>
-          <Caption1
-            style={{ fontSize: "16px", color: tokens.colorNeutralForeground3 }}
-          >
-            {pageDescription}
-          </Caption1>
-        </div>
-        <Divider style={{ opacity: 0.6 }} />
-      </FadeIn>
+    <div className="page-shell">
+      <PageHeader title={pageTitle} description={pageDescription} />
 
-      <motion.div
-        className={styles.tagCloud}
-        variants={staggerContainer}
-        initial="hidden"
-        animate="show"
-      >
-        {tags.map((tag) => {
+      <div className={styles.tagCloud}>
+        {tags.map((tag, index) => {
           // Calculate font size logically. Start at 14, max 20 based on count.
           const calculatedFontSize = Math.max(
             14,
@@ -113,21 +81,18 @@ export default function TagsClient({
           );
 
           return (
-            <motion.div
+            <div
               key={tag.name}
-              variants={staggerItem}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
+              className="stagger-in-item"
+              style={{ ["--i" as string]: index } as CSSProperties}
             >
               <Link
                 href={`/tags/${encodeURIComponent(tag.name)}`}
                 className={styles.tagLink}
               >
                 <Tag24Regular
-                  style={{
-                    color: tokens.colorBrandForeground1,
-                    fontSize: "16px",
-                  }}
+                  fontSize={16}
+                  style={{ color: tokens.colorBrandForeground1 }}
                 />
                 <span
                   className={styles.tagName}
@@ -137,10 +102,10 @@ export default function TagsClient({
                 </span>
                 <span className={styles.tagCount}>{tag.count}</span>
               </Link>
-            </motion.div>
+            </div>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

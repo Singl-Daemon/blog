@@ -1,9 +1,14 @@
-import { getPostsByTag, getAllTags } from "../../../lib/posts";
+import { getAllTags, getPostsByTag } from "@/lib/posts";
 import TagPostsClient from "./TagPostsClient";
 
 export async function generateStaticParams() {
   const tags = getAllTags();
-  return tags.map((t) => ({ tag: t.name }));
+  return tags.flatMap((t) => {
+    const encoded = encodeURIComponent(t.name);
+    return encoded === t.name
+      ? [{ tag: t.name }]
+      : [{ tag: t.name }, { tag: encoded }];
+  });
 }
 
 export default async function TagPage(props: {

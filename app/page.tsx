@@ -1,5 +1,5 @@
-import { getSortedPostsData } from "../lib/posts";
-import { getSiteConfig } from "../lib/site";
+import { getSortedPostsData } from "@/lib/posts";
+import { getSiteConfig } from "@/lib/site";
 import HomeClient from "./HomeClient";
 
 export default function Home() {

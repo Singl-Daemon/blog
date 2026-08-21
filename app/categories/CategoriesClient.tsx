@@ -1,43 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
 import {
-  makeStyles,
-  tokens,
-  Title1,
-  Title3,
   Body1,
   Caption1,
-  Divider,
+  makeStyles,
+  tokens,
 } from "@fluentui/react-components";
 import {
+  ChevronRight20Regular,
+  DocumentText24Regular,
   Folder24Regular,
   FolderOpen24Regular,
   TextBulletListLtr24Regular,
-  DocumentText24Regular,
-  ChevronRight20Regular,
 } from "@fluentui/react-icons";
+import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { FadeIn, staggerContainer, staggerItem } from "../components/FadeIn";
+import { type CSSProperties, useState } from "react";
+import { PageHeader } from "@/app/components/PageHeader";
+import { formatDateCompact } from "@/lib/date";
+import type { CategoryWithPosts } from "@/lib/posts";
 
 const useStyles = makeStyles({
-  container: {
-    display: "flex",
-    maxWidth: "840px",
-    margin: "0 auto",
-    flexDirection: "column",
-    gap: "36px",
-    width: "100%",
-  },
-  headerArea: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    alignItems: "flex-start",
-    textAlign: "left" as const,
-    marginBottom: "20px",
-  },
   listContainer: {
     display: "flex",
     flexDirection: "column",
@@ -48,21 +31,15 @@ const useStyles = makeStyles({
     alignItems: "center",
     gap: "16px",
     padding: "16px 20px",
-    position: "relative",
-    cursor: "pointer",
+    width: "100%",
+    textAlign: "left",
+    font: "inherit",
+    color: "inherit",
     borderRadius: "12px",
     backgroundColor: "transparent",
-    border: `1px solid transparent`,
-    transitionProperty: "all",
-    transitionDuration: "0.2s",
-    ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-      boxShadow: tokens.shadow4,
-      borderTopColor: tokens.colorNeutralStroke1Hover,
-      borderRightColor: tokens.colorNeutralStroke1Hover,
-      borderBottomColor: tokens.colorNeutralStroke1Hover,
-      borderLeftColor: tokens.colorNeutralStroke1Hover,
-    },
+    border: "1px solid transparent",
+    cursor: "pointer",
+    appearance: "none",
   },
   folderIconWrapper: {
     width: "48px",
@@ -73,12 +50,18 @@ const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "center",
     color: tokens.colorBrandForeground1,
+    flexShrink: 0,
   },
   catInfo: {
     display: "flex",
     flexDirection: "column",
     gap: "4px",
     flex: 1,
+    minWidth: 0,
+  },
+  catName: {
+    fontSize: "18px",
+    fontWeight: 600,
   },
   catMeta: {
     display: "flex",
@@ -89,6 +72,7 @@ const useStyles = makeStyles({
   },
   chevronIcon: {
     color: tokens.colorNeutralForeground4,
+    flexShrink: 0,
     transitionProperty: "transform",
     transitionDuration: "0.2s",
   },
@@ -101,7 +85,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: "8px",
-    padding: "0 0 16px 64px",
+    padding: "4px 0 12px 64px",
   },
   articleItem: {
     display: "flex",
@@ -109,11 +93,7 @@ const useStyles = makeStyles({
     gap: "12px",
     padding: "10px 14px",
     borderRadius: "8px",
-    transitionProperty: "background-color",
-    transitionDuration: "0.15s",
-    ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
+    border: "1px solid transparent",
   },
   articleThumb: {
     width: "40px",
@@ -122,6 +102,7 @@ const useStyles = makeStyles({
     objectFit: "cover",
     backgroundColor: tokens.colorNeutralBackground3,
     border: `1px solid ${tokens.colorNeutralStroke3}`,
+    flexShrink: 0,
   },
   articleTitle: {
     fontWeight: 500,
@@ -137,70 +118,51 @@ export default function CategoriesClient({
   pageTitle,
   pageDescription,
 }: {
-  categories: any[];
+  categories: CategoryWithPosts[];
   pageTitle: string;
   pageDescription: string;
 }) {
   const styles = useStyles();
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const toggleExpand = (name: string) => {
-    setExpanded((prev) => (prev === name ? null : name));
-  };
-
   return (
-    <div className={styles.container}>
-      <FadeIn yOffset={30}>
-        <div className={styles.headerArea}>
-          <Title1 style={{ fontSize: "36px", letterSpacing: "-0.02em" }}>
-            {pageTitle}
-          </Title1>
-          <Caption1
-            style={{ fontSize: "16px", color: tokens.colorNeutralForeground3 }}
-          >
-            {pageDescription}
-          </Caption1>
-        </div>
-        <Divider style={{ opacity: 0.6 }} />
-      </FadeIn>
+    <div className="page-shell">
+      <PageHeader title={pageTitle} description={pageDescription} />
 
-      <motion.div
-        className={styles.listContainer}
-        variants={staggerContainer}
-        initial="hidden"
-        animate="show"
-      >
-        {categories.map((cat) => {
+      <div className={styles.listContainer}>
+        {categories.map((cat, index) => {
           const isExpanded = expanded === cat.name;
 
           return (
-            <motion.div key={cat.name} variants={staggerItem}>
-              <div
-                className={styles.cardInner}
-                onClick={() => toggleExpand(cat.name)}
-                style={{
-                  backgroundColor: isExpanded
-                    ? tokens.colorNeutralBackground1
-                    : "transparent",
-                  borderColor: isExpanded
-                    ? tokens.colorNeutralStroke1
-                    : "transparent",
-                  boxShadow: isExpanded ? tokens.shadow4 : "none",
-                }}
+            <div
+              key={cat.name}
+              className="stagger-in-item"
+              style={{ ["--i" as string]: index } as CSSProperties}
+            >
+              <button
+                type="button"
+                className={`${styles.cardInner} soft-hover`}
+                aria-expanded={isExpanded}
+                onClick={() =>
+                  setExpanded((prev) => (prev === cat.name ? null : cat.name))
+                }
+                style={
+                  isExpanded
+                    ? { borderColor: "var(--color-border)" }
+                    : undefined
+                }
               >
                 <div className={styles.folderIconWrapper}>
                   {isExpanded ? (
-                    <FolderOpen24Regular style={{ fontSize: "28px" }} />
+                    <FolderOpen24Regular fontSize={28} />
                   ) : (
-                    <Folder24Regular style={{ fontSize: "28px" }} />
+                    <Folder24Regular fontSize={28} />
                   )}
                 </div>
                 <div className={styles.catInfo}>
-                  <Body1 style={{ fontSize: "18px", fontWeight: 600 }}>
-                    {cat.name}
-                  </Body1>
+                  <Body1 className={styles.catName}>{cat.name}</Body1>
                   <div className={styles.catMeta}>
-                    <TextBulletListLtr24Regular style={{ fontSize: "14px" }} />
+                    <TextBulletListLtr24Regular fontSize={14} />
                     <span>{cat.count} 篇文章</span>
                   </div>
                 </div>
@@ -210,78 +172,64 @@ export default function CategoriesClient({
                     transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
                   }}
                 />
-              </div>
+              </button>
 
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                    style={{ overflow: "hidden" }}
-                  >
-                    <div className={styles.articleList}>
-                      {cat.posts?.map((post: any) => (
-                        <Link
-                          key={post.slug}
-                          href={`/posts/${post.slug}`}
-                          className={styles.link}
-                        >
-                          <div className={styles.articleItem}>
-                            {post.image ? (
-                              <img
-                                src={post.image}
-                                alt={post.title}
-                                className={styles.articleThumb}
-                              />
-                            ) : (
-                              <div
-                                style={{
-                                  width: "40px",
-                                  height: "40px",
-                                  borderRadius: "6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  backgroundColor:
-                                    tokens.colorNeutralBackground3,
-                                  border: `1px solid ${tokens.colorNeutralStroke3}`,
-                                }}
-                              >
-                                <DocumentText24Regular
-                                  style={{
-                                    color: tokens.colorBrandForeground2,
-                                    fontSize: "20px",
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <Body1 className={styles.articleTitle}>
-                              {post.title}
-                            </Body1>
-                            <Caption1
+              <div className={`cat-fold${isExpanded ? " is-open" : ""}`}>
+                <div className="cat-fold-inner">
+                  <div className={styles.articleList}>
+                    {cat.posts.map((post) => (
+                      <Link
+                        key={post.slug}
+                        href={`/posts/${post.slug}`}
+                        className={styles.link}
+                      >
+                        <div className={`${styles.articleItem} soft-hover`}>
+                          {post.image ? (
+                            <Image
+                              src={post.image}
+                              alt={post.title}
+                              width={40}
+                              height={40}
+                              className={styles.articleThumb}
+                            />
+                          ) : (
+                            <div
+                              className={styles.articleThumb}
                               style={{
-                                color: tokens.colorNeutralForeground3,
-                                fontFamily:
-                                  "Cascadia Code, Consolas, monospace",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              {new Date(post.published).toLocaleDateString(
-                                "zh-CN",
-                              )}
-                            </Caption1>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                              <DocumentText24Regular
+                                style={{
+                                  color: tokens.colorBrandForeground2,
+                                  fontSize: "20px",
+                                }}
+                              />
+                            </div>
+                          )}
+                          <Body1 className={styles.articleTitle}>
+                            {post.title}
+                          </Body1>
+                          <Caption1
+                            style={{
+                              color: tokens.colorNeutralForeground3,
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            {formatDateCompact(post.published)}
+                          </Caption1>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

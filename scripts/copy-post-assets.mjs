@@ -2,8 +2,8 @@
  * Copy content/posts/<slug>/assets/** → public/post-assets/<slug>/assets/**
  * Runs as a prebuild step so Next.js static export can serve post images.
  */
-import { cpSync, mkdirSync, existsSync, readdirSync } from "fs";
-import { join } from "path";
+import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 const postsDir = join(process.cwd(), "content", "posts");
 const outDir = join(process.cwd(), "public", "post-assets");
@@ -17,5 +17,7 @@ for (const slug of readdirSync(postsDir, { withFileTypes: true })) {
   const dest = join(outDir, slug.name, "assets");
   mkdirSync(dest, { recursive: true });
   cpSync(assetsDir, dest, { recursive: true });
-  console.log(`  copied ${slug.name}/assets → public/post-assets/${slug.name}/assets`);
+  console.log(
+    `  copied ${slug.name}/assets → public/post-assets/${slug.name}/assets`,
+  );
 }

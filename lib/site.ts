@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import matter from "gray-matter";
 
 const contentDir = path.join(process.cwd(), "content");
@@ -46,9 +46,10 @@ export function getSiteConfig(): SiteConfig {
   const raw = fs.readFileSync(filePath, "utf8");
   const config = JSON.parse(raw) as SiteConfig;
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-  // Prepend basePath to all public asset paths so they work on sub-path deployments
   config.avatar = `${base}${config.avatar}`;
-  for (const key of Object.keys(config.favicon) as (keyof SiteConfig["favicon"])[]) {
+  for (const key of Object.keys(
+    config.favicon,
+  ) as (keyof SiteConfig["favicon"])[]) {
     config.favicon[key] = `${base}${config.favicon[key]}`;
   }
   return config;

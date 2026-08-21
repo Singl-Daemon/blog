@@ -1,21 +1,21 @@
-import { getPostData, getSortedPostsData } from "../../../lib/posts";
-import { getSiteConfig } from "../../../lib/site";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import rehypeKatex from "rehype-katex";
-import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeKatex from "rehype-katex";
 import rehypePrettyCode from "rehype-pretty-code";
-import remarkMath from "remark-math";
-import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
 import remarkDirective from "remark-directive";
+import remarkGfm from "remark-gfm";
 import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
-import { parseDirectiveNode } from "../../../lib/plugins/remark-directive-rehype.mjs";
+import remarkMath from "remark-math";
+import { mdxComponents } from "@/app/components/mdx/mdx-components";
 import {
-  remarkPreserveMeta,
   rehypeCodeMeta,
-} from "../../../lib/plugins/rehype-code-meta.mjs";
-import { rehypeImagePaths } from "../../../lib/plugins/rehype-image-paths.mjs";
-import { mdxComponents } from "../../components/mdx/mdx-components";
+  remarkPreserveMeta,
+} from "@/lib/plugins/rehype-code-meta";
+import { rehypeImagePaths } from "@/lib/plugins/rehype-image-paths";
+import { parseDirectiveNode } from "@/lib/plugins/remark-directive-rehype";
+import { getPostData, getSortedPostsData } from "@/lib/posts";
+import { getSiteConfig } from "@/lib/site";
 import PostClient from "./PostClient";
 import "katex/dist/katex.min.css";
 
@@ -67,13 +67,10 @@ export default async function Post(props: {
                   },
                   keepBackground: false,
                   defaultLang: "plaintext",
-                  filterMetaString: (meta: string) => {
-                    // Remove step annotation objects from meta so rehype-pretty-code
-                    // doesn't choke on them, but preserve word highlight strings
-                    return meta
+                  filterMetaString: (meta: string) =>
+                    meta
                       .replace(/\{"[^"]+?":\s*\d+-\d+\}/g, "")
-                      .replace(/wrap=\w+/g, "");
-                  },
+                      .replace(/wrap=\w+/g, ""),
                 },
               ],
               rehypeCodeMeta,
@@ -90,7 +87,13 @@ export default async function Post(props: {
                   },
                 },
               ],
-              [rehypeImagePaths, { slug: params.slug, basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "" }],
+              [
+                rehypeImagePaths,
+                {
+                  slug: params.slug,
+                  basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
+                },
+              ],
             ],
           },
         }}

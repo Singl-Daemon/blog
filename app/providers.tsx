@@ -2,24 +2,40 @@
 
 import {
   FluentProvider,
-  webLightTheme,
-  webDarkTheme,
   type Theme,
+  webDarkTheme,
+  webLightTheme,
 } from "@fluentui/react-components";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 const miSansFont =
   "'MiSans VF', 'MiSans', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif";
+const monoFont =
+  "'Cascadia Code Variable', 'Cascadia Code', 'Cascadia Mono', ui-monospace, Consolas, monospace";
 
-const lightTheme: Theme = { ...webLightTheme, fontFamilyBase: miSansFont };
-const darkTheme: Theme = { ...webDarkTheme, fontFamilyBase: miSansFont };
-import React, { useState, useEffect, createContext, useContext } from "react";
+const lightTheme: Theme = {
+  ...webLightTheme,
+  fontFamilyBase: miSansFont,
+  fontFamilyMonospace: monoFont,
+};
+const darkTheme: Theme = {
+  ...webDarkTheme,
+  fontFamilyBase: miSansFont,
+  fontFamilyMonospace: monoFont,
+};
 
 type ThemeContextType = {
   theme: "light" | "dark";
   toggleTheme: () => void;
   setTheme: (t: "light" | "dark") => void;
   resetTheme: () => void; // clear override, follow system again
-  isOverride: boolean;   // true when user has manually chosen a theme
+  isOverride: boolean; // true when user has manually chosen a theme
 };
 
 export const ThemeContext = createContext<ThemeContextType>({
@@ -34,7 +50,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 const THEME_KEY = "blog-theme-override";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
   const [isOverride, setIsOverride] = useState(false);
@@ -88,7 +104,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const themeToApply = themeName === "dark" ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{ theme: themeName, toggleTheme, setTheme, resetTheme, isOverride }}>
+    <ThemeContext.Provider
+      value={{
+        theme: themeName,
+        toggleTheme,
+        setTheme,
+        resetTheme,
+        isOverride,
+      }}
+    >
       <FluentProvider
         theme={themeToApply}
         style={{

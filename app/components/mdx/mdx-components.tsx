@@ -1,6 +1,6 @@
-import { Note, Tip, Important, Warning, Caution } from "./Admonition";
-import { GithubCard } from "./GithubCard";
+import { Caution, Important, Note, Tip, Warning } from "./Admonition";
 import { Pre } from "./CodeBlock";
+import { GithubCard } from "./GithubCard";
 
 /**
  * MDX component map for next-mdx-remote.

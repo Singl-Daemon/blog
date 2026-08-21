@@ -1,56 +1,36 @@
 "use client";
 
-import { HTMLMotionProps, motion } from "framer-motion";
-import React from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-interface FadeInProps extends HTMLMotionProps<"div"> {
+interface FadeInProps {
+  children: ReactNode;
   delay?: number;
   duration?: number;
   yOffset?: number;
+  className?: string;
+  style?: CSSProperties;
 }
 
 export function FadeIn({
   children,
   delay = 0,
   duration = 0.5,
-  yOffset = 20,
+  yOffset = 12,
   className,
   style,
-  ...props
 }: FadeInProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: yOffset }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-      style={style}
-      {...props}
+    <div
+      className={className ? `fade-in ${className}` : "fade-in"}
+      style={{
+        ...style,
+        animationDelay: `${delay}s`,
+        animationDuration: `${duration}s`,
+        ["--fade-y" as string]: `${yOffset}px`,
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-export const staggerContainer = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-export const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  },
-};

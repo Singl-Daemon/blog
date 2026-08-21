@@ -1,5 +1,5 @@
-import { getSortedPostsData } from "../../lib/posts";
-import { getSiteConfig } from "../../lib/site";
+import { getSortedPostsData } from "@/lib/posts";
+import { getSiteConfig } from "@/lib/site";
 import ArchiveClient from "./ArchiveClient";
 
 export default function ArchivePage() {
@@ -9,7 +9,10 @@ export default function ArchivePage() {
     <ArchiveClient
       posts={posts}
       pageTitle={site.pages.archive.title}
-      pageDescription={site.pages.archive.descriptionTemplate.replace("{count}", String(posts.length))}
+      pageDescription={site.pages.archive.descriptionTemplate.replace(
+        "{count}",
+        String(posts.length),
+      )}
     />
   );
 }

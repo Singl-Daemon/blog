@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Sidebar from "./components/Sidebar";
 import { Button } from "@fluentui/react-components";
 import { Navigation24Regular } from "@fluentui/react-icons";
+import { usePathname } from "next/navigation";
+import { type ReactNode, useEffect, useLayoutEffect, useState } from "react";
+import Sidebar from "./components/Sidebar";
 
 export default function ClientLayout({
   children,
@@ -11,23 +12,39 @@ export default function ClientLayout({
   authorName,
   authorAvatar,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   siteTitle: string;
   authorName: string;
   authorAvatar: string;
 }) {
+  const pathname = usePathname();
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState(false);
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
+  const [allowMotion, setAllowMotion] = useState(false);
 
-  // Restore sidebar state from localStorage
-  useEffect(() => {
+  useLayoutEffect(() => {
     const saved = localStorage.getItem("blog-sidebar-expanded");
     if (saved !== null) setIsDesktopExpanded(saved === "true");
+    setHydrated(true);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!hydrated) return;
+    document.documentElement.removeAttribute("data-sidebar");
+    document.documentElement.removeAttribute("data-sidebar-mobile");
+    document.getElementById("sidebar-boot-css")?.remove();
+    const id = requestAnimationFrame(() => setAllowMotion(true));
+    return () => cancelAnimationFrame(id);
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!pathname) return;
+    setIsSidebarOpenMobile(false);
+  }, [pathname]);
 
   return (
     <>
-      {/* Fluent gradient background — rendered inside FluentProvider */}
       <div className="fluent-bg" aria-hidden="true">
         <div className="fluent-orb fluent-orb-1" />
         <div className="fluent-orb fluent-orb-2" />
@@ -47,12 +64,15 @@ export default function ClientLayout({
         <Sidebar
           isOpen={isSidebarOpenMobile}
           onClose={() => setIsSidebarOpenMobile(false)}
-          onToggleDesktop={() => setIsDesktopExpanded((prev) => {
-            const next = !prev;
-            localStorage.setItem("blog-sidebar-expanded", String(next));
-            return next;
-          })}
+          onToggleDesktop={() =>
+            setIsDesktopExpanded((prev) => {
+              const next = !prev;
+              localStorage.setItem("blog-sidebar-expanded", String(next));
+              return next;
+            })
+          }
           isDesktopExpanded={isDesktopExpanded}
+          allowMotion={allowMotion}
           siteTitle={siteTitle}
           authorName={authorName}
           authorAvatar={authorAvatar}
@@ -64,27 +84,16 @@ export default function ClientLayout({
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
+            transition: allowMotion
+              ? "padding 0.22s cubic-bezier(0.16, 1, 0.3, 1)"
+              : "none",
           }}
         >
-          {/* Mobile-only top bar */}
-          <div
-            className="mobile-only-header"
-            style={{
-              display: "flex",
-              padding: "8px 12px",
-              alignItems: "center",
-              position: "sticky",
-              top: 0,
-              background: "var(--color-surface)",
-              backdropFilter: "saturate(180%) blur(20px)",
-              WebkitBackdropFilter: "saturate(180%) blur(20px)",
-              zIndex: 100,
-              borderBottom: "1px solid var(--color-border)",
-            }}
-          >
+          <div className="mobile-only-header">
             <Button
               appearance="subtle"
               icon={<Navigation24Regular />}
+              aria-label="打开菜单"
               onClick={() => setIsSidebarOpenMobile(true)}
             />
             <span
@@ -94,31 +103,17 @@ export default function ClientLayout({
             </span>
           </div>
 
-          <div
-            className="content-area"
-            style={{ padding: "32px 48px", flex: 1 }}
-          >
-            {children}
-          </div>
+          <div className="content-area">{children}</div>
         </main>
 
-        {/* Mobile overlay */}
-        {isSidebarOpenMobile && (
-          <div
-            onClick={() => setIsSidebarOpenMobile(false)}
-            className="mobile-overlay"
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              zIndex: 999,
-              animation: "fadeIn 0.2s ease",
-            }}
-          />
-        )}
+        <button
+          type="button"
+          aria-label="关闭侧边栏"
+          aria-hidden={!isSidebarOpenMobile}
+          tabIndex={isSidebarOpenMobile ? 0 : -1}
+          onClick={() => setIsSidebarOpenMobile(false)}
+          className={`mobile-overlay${isSidebarOpenMobile ? " is-open" : ""}`}
+        />
       </div>
     </>
   );

@@ -1,9 +1,15 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
+import fs from "node:fs";
+import path from "node:path";
 import GithubSlugger from "github-slugger";
+import matter from "gray-matter";
 
 const postsDirectory = path.join(process.cwd(), "content", "posts");
+
+export interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
 
 export interface PostMeta {
   slug: string;
@@ -15,11 +21,23 @@ export interface PostMeta {
   tags?: string[];
   image?: string;
   draft?: boolean;
-  toc?: { id: string; text: string; level: number }[];
+  toc?: TocItem[];
+}
+
+export interface PostData extends PostMeta {
+  content: string;
+}
+
+export interface NamedCount {
+  name: string;
+  count: number;
+}
+
+export interface CategoryWithPosts extends NamedCount {
+  posts: PostMeta[];
 }
 
 function findPostFile(dir: string): string | null {
-  // Support both flat files (post-name.md) and directory-based (post-name/index.md)
   if (
     fs.statSync(dir).isFile() &&
     (dir.endsWith(".md") || dir.endsWith(".mdx"))
@@ -59,7 +77,6 @@ export function getSortedPostsData(): PostMeta[] {
     const fileContents = fs.readFileSync(filePath, "utf8");
     const matterResult = matter(fileContents);
 
-    // Skip drafts
     if (matterResult.data.draft) continue;
 
     allPostsData.push({
@@ -68,13 +85,10 @@ export function getSortedPostsData(): PostMeta[] {
     });
   }
 
-  return allPostsData.sort((a, b) => {
-    if (a.published < b.published) return 1;
-    return -1;
-  });
+  return allPostsData.sort((a, b) => (a.published < b.published ? 1 : -1));
 }
 
-export function getPostData(slug: string) {
+export function getPostData(slug: string): PostData {
   const dirPath = path.join(postsDirectory, slug);
   const flatMd = path.join(postsDirectory, `${slug}.md`);
   const flatMdx = path.join(postsDirectory, `${slug}.mdx`);
@@ -94,10 +108,10 @@ export function getPostData(slug: string) {
   const matterResult = matter(fileContents);
 
   const slugger = new GithubSlugger();
-  const toc: { id: string; text: string; level: number }[] = [];
+  const toc: TocItem[] = [];
   const headingRegex = /^(#{1,6})\s+(.+)$/gm;
-  let match;
-  while ((match = headingRegex.exec(matterResult.content)) !== null) {
+
+  for (const match of matterResult.content.matchAll(headingRegex)) {
     const level = match[1].length;
     const textPath = match[2]
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
@@ -121,27 +135,27 @@ export function getPostData(slug: string) {
   };
 }
 
-export function getAllTags(): { name: string; count: number }[] {
+export function getAllTags(): NamedCount[] {
   const posts = getSortedPostsData();
   const tagMap = new Map<string, number>();
-  posts.forEach((post) => {
-    post.tags?.forEach((tag) => {
-      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-    });
-  });
-  return Array.from(tagMap.entries())
+  for (const post of posts) {
+    for (const tag of post.tags ?? []) {
+      tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
+    }
+  }
+  return [...tagMap.entries()]
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 }
 
-export function getAllCategories(): { name: string; count: number }[] {
+export function getAllCategories(): NamedCount[] {
   const posts = getSortedPostsData();
   const catMap = new Map<string, number>();
-  posts.forEach((post) => {
+  for (const post of posts) {
     const cat = post.category || "未分类";
-    catMap.set(cat, (catMap.get(cat) || 0) + 1);
-  });
-  return Array.from(catMap.entries())
+    catMap.set(cat, (catMap.get(cat) ?? 0) + 1);
+  }
+  return [...catMap.entries()]
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 }

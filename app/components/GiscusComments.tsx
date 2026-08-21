@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import GiscusComponent from "@giscus/react";
-import type { Mapping, InputPosition, BooleanString } from "@giscus/react";
-import { useTheme } from "../providers";
 import {
-  makeStyles,
-  tokens,
-  Subtitle1,
   Caption1,
   CounterBadge,
+  makeStyles,
+  Subtitle1,
+  tokens,
 } from "@fluentui/react-components";
 import {
-  CommentMultiple24Regular,
   ArrowSync16Regular,
+  CommentMultiple24Regular,
 } from "@fluentui/react-icons";
+import type { BooleanString, InputPosition, Mapping } from "@giscus/react";
+import GiscusComponent from "@giscus/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTheme } from "@/app/providers";
 
 const useStyles = makeStyles({
   root: {
@@ -130,7 +130,7 @@ export default function GiscusComments({
   // Listen for giscus discussion metadata to get comment count
   const handleMessage = useCallback((event: MessageEvent) => {
     if (event.origin !== "https://giscus.app") return;
-    if (!event.data || !event.data.giscus) return;
+    if (!event.data?.giscus) return;
     const data = event.data.giscus;
     if (data.discussion) {
       setCommentCount(data.discussion.totalCommentCount ?? 0);
@@ -204,7 +204,7 @@ export default function GiscusComments({
               mapping={mapping as Mapping}
               strict={strict as BooleanString}
               reactionsEnabled={reactionsEnabled as BooleanString}
-              emitMetadata={"1" as BooleanString}
+              emitMetadata={emitMetadata as BooleanString}
               inputPosition={inputPosition as InputPosition}
               theme={giscusTheme}
               lang={lang}

@@ -13,8 +13,16 @@
     "name": "Singl",
     "bio": "热爱技术的开发者，专注于 C++ 和 Windows 系统开发领域，喜欢分享技术见解和学习心得。",
     "links": [
-      { "type": "github", "label": "GitHub", "url": "https://github.com/Singl-Daemon" },
-      { "type": "qq", "label": "QQ 群", "url": "https://qm.qq.com/q/Tp7GR3w8s8" },
+      {
+        "type": "github",
+        "label": "GitHub",
+        "url": "https://github.com/Singl-Daemon"
+      },
+      {
+        "type": "qq",
+        "label": "QQ 群",
+        "url": "https://qm.qq.com/q/Tp7GR3w8s8"
+      },
       { "type": "email", "label": "Email", "url": "mailto:std@singl.top" }
     ]
   },

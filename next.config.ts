@@ -1,7 +1,8 @@
-/** @type {import('next').NextConfig} */
-const basePath = process.env.NEXT_BASE_PATH || "";
+import type { NextConfig } from "next";
 
-const nextConfig = {
+const basePath = process.env.NEXT_BASE_PATH ?? "";
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "export",
   basePath,
@@ -14,4 +15,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

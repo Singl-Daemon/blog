@@ -142,7 +142,9 @@ main .gsc-comment-box-textarea:focus {
 main .gsc-comment {
   border-radius: 8px;
   border: 1px solid transparent;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 main .gsc-comment:hover {
@@ -157,7 +159,9 @@ main .gsc-header {
 main .gsc-reactions-button {
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.0578);
-  transition: background 0.1s ease, border-color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease;
 }
 
 main .gsc-reply-box,

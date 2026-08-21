@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { Children, type ReactNode } from "react";
 
 const typeConfig: Record<
   string,
@@ -40,7 +40,7 @@ const typeConfig: Record<
 
 interface AdmonitionProps {
   type: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
   title?: string;
 }
 
@@ -92,6 +92,7 @@ function AdmonitionBase({ type, children, title }: AdmonitionProps) {
           width="16"
           height="16"
           fill="currentColor"
+          aria-hidden="true"
           style={{ flexShrink: 0 }}
         >
           <path d={config.icon} />
@@ -103,17 +104,21 @@ function AdmonitionBase({ type, children, title }: AdmonitionProps) {
   );
 }
 
-// Each admonition type as a separate component for MDXRemote mapping
-export function Note({ children, title, ...props }: any) {
-  // Check if first child has directive-label flag
-  const labelTitle =
-    props["has-directive-label"] && React.Children.toArray(children)[0];
-  const restChildren = props["has-directive-label"]
-    ? React.Children.toArray(children).slice(1)
-    : children;
+interface AdmonitionBlockProps {
+  children?: ReactNode;
+  title?: string;
+  "has-directive-label"?: boolean;
+}
+
+export function Note({ children, title, ...props }: AdmonitionBlockProps) {
+  const hasLabel = Boolean(props["has-directive-label"]);
+  const childArray = Children.toArray(children);
+  const labelTitle = hasLabel ? childArray[0] : undefined;
+  const restChildren = hasLabel ? childArray.slice(1) : children;
+
   return (
     <AdmonitionBase type="note" title={labelTitle ? undefined : title}>
-      {props["has-directive-label"] ? (
+      {hasLabel ? (
         <>
           <div style={{ display: "none" }}>{labelTitle}</div>
           {restChildren}
@@ -125,7 +130,7 @@ export function Note({ children, title, ...props }: any) {
   );
 }
 
-export function Tip({ children, title, ...props }: any) {
+export function Tip({ children, title }: AdmonitionBlockProps) {
   return (
     <AdmonitionBase type="tip" title={title}>
       {children}
@@ -133,7 +138,7 @@ export function Tip({ children, title, ...props }: any) {
   );
 }
 
-export function Important({ children, title, ...props }: any) {
+export function Important({ children, title }: AdmonitionBlockProps) {
   return (
     <AdmonitionBase type="important" title={title}>
       {children}
@@ -141,7 +146,7 @@ export function Important({ children, title, ...props }: any) {
   );
 }
 
-export function Warning({ children, title, ...props }: any) {
+export function Warning({ children, title }: AdmonitionBlockProps) {
   return (
     <AdmonitionBase type="warning" title={title}>
       {children}
@@ -149,7 +154,7 @@ export function Warning({ children, title, ...props }: any) {
   );
 }
 
-export function Caution({ children, title, ...props }: any) {
+export function Caution({ children, title }: AdmonitionBlockProps) {
   return (
     <AdmonitionBase type="caution" title={title}>
       {children}

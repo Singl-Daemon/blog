@@ -1,25 +1,21 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useServerInsertedHTML } from "next/navigation";
 import {
   createDOMRenderer,
+  type GriffelRenderer,
   RendererProvider,
-  SSRProvider,
-  GriffelRenderer,
   renderToStyleElements,
+  SSRProvider,
 } from "@fluentui/react-components";
+import { useServerInsertedHTML } from "next/navigation";
+import { type ReactNode, useRef, useState } from "react";
 
 /**
  * FluentRegistry injects Griffel CSS into the <head> server-side via
  * useServerInsertedHTML, eliminating the flash of unstyled Fluent UI
  * components on first paint.
  */
-export default function FluentRegistry({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FluentRegistry({ children }: { children: ReactNode }) {
   const [renderer] = useState<GriffelRenderer>(() => createDOMRenderer());
   const didInsertRef = useRef(false);
 

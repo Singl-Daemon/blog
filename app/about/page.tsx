@@ -1,7 +1,7 @@
-import { getSiteConfig, getAboutPageData } from "../../lib/site";
-import AboutClient from "./AboutClient";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
+import { getAboutPageData, getSiteConfig } from "@/lib/site";
+import AboutClient from "./AboutClient";
 
 export default function AboutPage() {
   const site = getSiteConfig();
