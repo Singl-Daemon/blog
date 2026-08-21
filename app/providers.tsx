@@ -13,6 +13,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 
 const miSansFont =
   "'MiSans VF', 'MiSans', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif";
@@ -50,6 +51,22 @@ export const useTheme = () => useContext(ThemeContext);
 
 const THEME_KEY = "blog-theme-override";
 
+function applyDocumentTheme(themeName: "light" | "dark") {
+  document.documentElement.setAttribute("data-theme", themeName);
+  document.documentElement.style.colorScheme = themeName;
+}
+
+function withThemeTransition(update: () => void) {
+  const start = document.startViewTransition?.bind(document);
+  if (typeof start === "function") {
+    start(() => {
+      flushSync(update);
+    });
+    return;
+  }
+  update();
+}
+
 export default function Providers({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
@@ -63,42 +80,49 @@ export default function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
 
     const handler = (e: MediaQueryListEvent) => {
-      // Only follow system if no user override
-      if (!localStorage.getItem(THEME_KEY)) {
-        setThemeName(e.matches ? "dark" : "light");
-      }
+      if (localStorage.getItem(THEME_KEY)) return;
+      const next = e.matches ? "dark" : "light";
+      withThemeTransition(() => {
+        setThemeName(next);
+        applyDocumentTheme(next);
+      });
     };
     mediaQuery.addEventListener("change", handler);
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
   const toggleTheme = () => {
-    setThemeName((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem(THEME_KEY, next);
+    const next = themeName === "light" ? "dark" : "light";
+    localStorage.setItem(THEME_KEY, next);
+    withThemeTransition(() => {
       setIsOverride(true);
-      return next;
+      setThemeName(next);
+      applyDocumentTheme(next);
     });
   };
 
   const setTheme = (t: "light" | "dark") => {
     localStorage.setItem(THEME_KEY, t);
-    setIsOverride(true);
-    setThemeName(t);
+    withThemeTransition(() => {
+      setIsOverride(true);
+      setThemeName(t);
+      applyDocumentTheme(t);
+    });
   };
 
   const resetTheme = () => {
     localStorage.removeItem(THEME_KEY);
-    setIsOverride(false);
     const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setThemeName(dark ? "dark" : "light");
+    const next = dark ? "dark" : "light";
+    withThemeTransition(() => {
+      setIsOverride(false);
+      setThemeName(next);
+      applyDocumentTheme(next);
+    });
   };
 
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.setAttribute("data-theme", themeName);
-      document.documentElement.style.colorScheme = themeName;
-    }
+    if (mounted) applyDocumentTheme(themeName);
   }, [themeName, mounted]);
 
   const themeToApply = themeName === "dark" ? darkTheme : lightTheme;

@@ -139,6 +139,24 @@ html {
   background-color: var(--color-bg);
   background-image: var(--page-bg-image);
   background-attachment: fixed;
+  transition: background-color 0.35s ease;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms;
+  }
 }
 
 .fade-in {
@@ -210,6 +228,7 @@ body {
   right: -5%;
   filter: blur(60px);
   animation: drift1 30s ease-in-out infinite alternate;
+  transition: background 0.35s ease;
 }
 
 .fluent-bg::after {
@@ -229,6 +248,7 @@ body {
   left: -8%;
   filter: blur(60px);
   animation: drift2 35s ease-in-out infinite alternate;
+  transition: background 0.35s ease;
 }
 
 /* Additional animated orbs for richer dynamic feel */
@@ -237,6 +257,7 @@ body {
   border-radius: 50%;
   filter: blur(80px);
   will-change: transform;
+  transition: background 0.35s ease;
 }
 
 .fluent-orb-1 {

@@ -227,6 +227,8 @@ export default function Sidebar({
           skipWidth ? null : `padding ${fluentEase}`,
           "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          "background 0.35s ease",
+          "border-color 0.35s ease",
         ]
           .filter(Boolean)
           .join(", "),

@@ -130,8 +130,12 @@ export function PostGrid({
             : `repeat(${cols}, minmax(0, 1fr))`,
       }}
     >
-      {posts.map((post) => (
-        <div key={post.slug} className={styles.item}>
+      {posts.map((post, index) => (
+        <div
+          key={post.slug}
+          className={`${styles.item} stagger-in-item`}
+          style={{ ["--i" as string]: index }}
+        >
           <PostCard post={post} />
         </div>
       ))}
