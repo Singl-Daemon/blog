@@ -961,6 +961,14 @@ html[data-sidebar-mobile] .blog-sidebar {
   width: 280px !important;
   transform: translateX(-100%) !important;
   box-shadow: none !important;
+}
+
+html[data-sidebar-mobile] .blog-sidebar.is-open {
+  transform: none !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+html:not([data-sidebar-ready])[data-sidebar-mobile] .blog-sidebar {
   transition: none !important;
 }
 

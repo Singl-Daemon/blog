@@ -44,18 +44,25 @@ export default function ClientLayout({
   useLayoutEffect(() => {
     if (!hydrated) return;
     const root = document.documentElement;
-    const mobile = window.matchMedia("(max-width: 768px)").matches;
-    if (mobile) {
-      root.setAttribute("data-sidebar-mobile", "1");
-      root.removeAttribute("data-sidebar");
-    } else {
+    const mq = window.matchMedia("(max-width: 768px)");
+
+    const sync = () => {
+      if (mq.matches) {
+        root.setAttribute("data-sidebar-mobile", "1");
+        root.removeAttribute("data-sidebar");
+        return;
+      }
       root.removeAttribute("data-sidebar-mobile");
       root.setAttribute(
         "data-sidebar",
         isDesktopExpanded ? "expanded" : "collapsed",
       );
-    }
+    };
+
+    sync();
     document.getElementById("sidebar-boot-css")?.remove();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, [hydrated, isDesktopExpanded]);
 
   useLayoutEffect(() => {
