@@ -155,7 +155,6 @@ export default function PostClient({
   const styles = useStyles();
   const router = useRouter();
   const frameRef = useRef<HTMLElement>(null);
-  const playedSlug = useRef<string | null>(null);
   const [activeId, setActiveId] = useState<string>("");
   const [returnHref, setReturnHref] = useState<string | null>(null);
   useDocumentTitle(title, getClientSiteTitle());
@@ -163,12 +162,10 @@ export default function PostClient({
   useLayoutEffect(() => {
     setReturnHref(peekReturn(slug)?.href ?? null);
     scrollWindowInstant(0);
-    if (playedSlug.current === slug) return;
     const node = frameRef.current;
     if (!node) return;
     const pending = takePendingExpand(slug);
     if (!pending) return;
-    playedSlug.current = slug;
     playExpand(node, pending);
   }, [slug]);
 
@@ -246,6 +243,7 @@ export default function PostClient({
             <>
               <div className={styles.metaDivider} />
               <Link
+                prefetch={false}
                 href={`/categories/${encodeURIComponent(category)}`}
                 className={styles.metaLink}
                 data-page-title={`分类: ${category}`}
@@ -267,6 +265,7 @@ export default function PostClient({
                 <Tag24Regular style={{ color: tokens.colorBrandForeground1 }} />
                 {tags.map((tag) => (
                   <Link
+                    prefetch={false}
                     key={tag}
                     href={`/tags/${encodeURIComponent(tag)}`}
                     className={styles.tagLink}

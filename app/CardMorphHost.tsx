@@ -5,7 +5,10 @@ import { useLayoutEffect } from "react";
 import {
   interruptCardMorph,
   peekPendingExpandSlug,
+  playExpand,
   playPendingCollapse,
+  prepareExpandEnter,
+  takePendingExpand,
 } from "@/lib/card-morph";
 import {
   consumeHistoryRestore,
@@ -31,6 +34,14 @@ export default function CardMorphHost() {
     const postSlug = pathname.startsWith("/posts/")
       ? decodeURIComponent(pathname.slice("/posts/".length))
       : null;
+    if (pendingSlug && postSlug === pendingSlug) {
+      prepareExpandEnter(postSlug);
+      const header = document.querySelector("[data-card-morph-frame]");
+      const pending = takePendingExpand(postSlug);
+      if (header instanceof HTMLElement && pending) {
+        playExpand(header, pending);
+      }
+    }
     applyPageEnter();
 
     if (pathname === "/") {
@@ -44,7 +55,7 @@ export default function CardMorphHost() {
           id = requestAnimationFrame(retry);
           return;
         }
-        interruptCardMorph();
+        if (!peekPendingExpandSlug()) interruptCardMorph();
       };
       id = requestAnimationFrame(retry);
       return () => cancelAnimationFrame(id);

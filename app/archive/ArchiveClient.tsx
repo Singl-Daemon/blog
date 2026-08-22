@@ -113,6 +113,7 @@ export default function ArchiveClient({
             <div className={styles.postList}>
               {grouped[year].map((post) => (
                 <Link
+                  prefetch={false}
                   key={post.slug}
                   href={`/posts/${post.slug}`}
                   className={styles.link}

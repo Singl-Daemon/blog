@@ -10,7 +10,8 @@ import {
 } from "react";
 import {
   applyDocumentTitle,
-  rememberAndApplyTitle,
+  formatDocumentTitle,
+  rememberDocumentTitle,
 } from "@/lib/document-title";
 import {
   interruptCardMorph,
@@ -106,9 +107,10 @@ export default function NavigationEffects({
         }
         const pageTitle = anchor.getAttribute("data-page-title");
         if (pageTitle) {
-          rememberAndApplyTitle(href, pageTitle, siteTitle);
-        } else {
-          applyDocumentTitle(href, siteTitle);
+          rememberDocumentTitle(
+            href,
+            formatDocumentTitle(pageTitle, siteTitle),
+          );
         }
       } catch {
         /* ignore */

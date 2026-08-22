@@ -15,6 +15,7 @@ export function PostLink({ slug, className }: PostLinkProps) {
 
   return (
     <Link
+      prefetch={false}
       href={`/posts/${post.slug}`}
       className={cx("mdx-post-link", className)}
     >

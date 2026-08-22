@@ -56,7 +56,7 @@ export function PageHeader({
     <FadeIn yOffset={16} duration={0.5}>
       <header className="page-header">
         {back ? (
-          <Link href={back.href} className="page-header-back">
+          <Link prefetch={false} href={back.href} className="page-header-back">
             <ArrowLeft24Regular fontSize={20} />
             {back.label}
           </Link>

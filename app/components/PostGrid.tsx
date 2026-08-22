@@ -2,7 +2,6 @@
 
 import { Body1, makeStyles, Title3, tokens } from "@fluentui/react-components";
 import { useLayoutEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FadeIn } from "@/app/components/FadeIn";
 import { PostCard } from "@/app/components/PostCard";
 import type { PostMeta } from "@/lib/posts";
@@ -42,17 +41,9 @@ export function PostGrid({
   fromHome?: boolean;
 }) {
   const styles = useStyles();
-  const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
   const oldRectsRef = useRef<DOMRect[] | null>(null);
   const [cols, setCols] = useState<number | null>(null);
-
-  const slugs = posts.map((post) => post.slug).join("\0");
-  useLayoutEffect(() => {
-    for (const slug of slugs.split("\0")) {
-      if (slug) router.prefetch(`/posts/${slug}`);
-    }
-  }, [slugs, router]);
 
   useLayoutEffect(() => {
     const el = gridRef.current;

@@ -69,7 +69,7 @@ export function LinkCard({
   }
 
   return (
-    <Link className={classes} href={href}>
+    <Link prefetch={false} className={classes} href={href}>
       {inner}
     </Link>
   );

@@ -65,6 +65,11 @@
   --important-bg: rgba(135, 100, 184, 0.06);
   --caution-color: #a4262c;
   --caution-bg: rgba(164, 38, 44, 0.06);
+
+  /* Fuwari-like overlay scrollbar */
+  --scrollbar-bg: rgba(0, 0, 0, 0.4);
+  --scrollbar-bg-hover: rgba(0, 0, 0, 0.5);
+  --scrollbar-bg-active: rgba(0, 0, 0, 0.6);
 }
 
 html[data-theme="dark"] {
@@ -119,12 +124,107 @@ html[data-theme="dark"] {
   --important-bg: rgba(180, 160, 255, 0.08);
   --caution-color: #ff6767;
   --caution-bg: rgba(255, 103, 103, 0.08);
+
+  --scrollbar-bg: rgba(255, 255, 255, 0.4);
+  --scrollbar-bg-hover: rgba(255, 255, 255, 0.5);
+  --scrollbar-bg-active: rgba(255, 255, 255, 0.6);
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Overlay scrollbar (fuwari-like): hide native bars on hosts we paint. */
+html[data-custom-scrollbar],
+html[data-custom-scrollbar] body,
+html[data-custom-scrollbar] .blog-sidebar,
+html[data-custom-scrollbar] .toc-body,
+html[data-custom-scrollbar] .code-block-wrapper pre,
+html[data-custom-scrollbar] .prose pre,
+html[data-custom-scrollbar] .prose .katex-display {
+  scrollbar-width: none;
+}
+
+html[data-custom-scrollbar]::-webkit-scrollbar,
+html[data-custom-scrollbar] body::-webkit-scrollbar,
+html[data-custom-scrollbar] .blog-sidebar::-webkit-scrollbar,
+html[data-custom-scrollbar] .toc-body::-webkit-scrollbar,
+html[data-custom-scrollbar] .code-block-wrapper pre::-webkit-scrollbar,
+html[data-custom-scrollbar] .prose pre::-webkit-scrollbar,
+html[data-custom-scrollbar] .prose .katex-display::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html.is-scrollbar-drag {
+  scroll-behavior: auto !important;
+}
+
+#custom-scrollbar-root {
+  pointer-events: none;
+}
+
+.custom-scrollbar {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  padding: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.custom-scrollbar.is-visible,
+.custom-scrollbar.is-hovered,
+.custom-scrollbar.is-dragging {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.custom-scrollbar-handle {
+  border-radius: 999px;
+  background: var(--scrollbar-bg);
+  touch-action: none;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease,
+    background-color 0.15s ease;
+}
+
+.custom-scrollbar-y .custom-scrollbar-handle {
+  width: 4px;
+  margin-inline: auto;
+}
+
+.custom-scrollbar-x .custom-scrollbar-handle {
+  height: 4px;
+  margin-block: auto;
+}
+
+.custom-scrollbar-y.is-hovered .custom-scrollbar-handle,
+.custom-scrollbar-y:hover .custom-scrollbar-handle {
+  width: 8px;
+  background: var(--scrollbar-bg-hover);
+}
+
+.custom-scrollbar-x.is-hovered .custom-scrollbar-handle,
+.custom-scrollbar-x:hover .custom-scrollbar-handle {
+  height: 8px;
+  background: var(--scrollbar-bg-hover);
+}
+
+.custom-scrollbar-handle:active {
+  background: var(--scrollbar-bg-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-scrollbar,
+  .custom-scrollbar-handle {
+    transition: none;
+  }
 }
 
 /* Prevent images from breaking layout during hydration */
@@ -1378,25 +1478,6 @@ html[data-theme="dark"] .copy-btn {
 
 .code-block-wrapper:has(.code-lang-badge):not(.has-steps) pre {
   padding-top: 28px;
-}
-
-.code-block-wrapper pre {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(
-      in srgb,
-      var(--color-text-secondary) 40%,
-      transparent
-    )
-    transparent;
-}
-
-.code-block-wrapper pre::-webkit-scrollbar {
-  height: 8px;
-}
-
-.code-block-wrapper pre::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-text-secondary) 35%, transparent);
-  border-radius: 8px;
 }
 
 .code-block-wrapper:hover .copy-btn {

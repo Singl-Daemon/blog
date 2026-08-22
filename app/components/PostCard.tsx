@@ -9,7 +9,6 @@ import {
 } from "@fluentui/react-components";
 import { ArrowRight24Regular } from "@fluentui/react-icons";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { memo, type MouseEvent } from "react";
 import { armCardExpand } from "@/lib/card-morph";
 import { formatDateLong } from "@/lib/date";
@@ -141,7 +140,6 @@ function PostCardComponent({
   fromHome?: boolean;
 }) {
   const styles = useStyles();
-  const router = useRouter();
   const hasCover = Boolean(post.image);
   const titleColor = hasCover ? "#ffffff" : "var(--color-text)";
   const mutedColor = hasCover
@@ -156,9 +154,7 @@ function PostCardComponent({
       return;
     }
     if (!fromHome) return;
-    event.preventDefault();
     armCardExpand(post.slug, event.currentTarget);
-    router.push(`/posts/${post.slug}`);
   };
 
   return (
@@ -167,11 +163,8 @@ function PostCardComponent({
       className={`${styles.card} post-card`}
       data-post-slug={post.slug}
       data-page-title={post.title}
-      prefetch
+      prefetch={false}
       onClick={onNavigate}
-      onPointerEnter={() => {
-        if (fromHome) router.prefetch(`/posts/${post.slug}`);
-      }}
     >
       {hasCover ? (
         <>

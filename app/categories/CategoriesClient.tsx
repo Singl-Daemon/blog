@@ -179,6 +179,7 @@ export default function CategoriesClient({
                   <div className={styles.articleList}>
                     {cat.posts.map((post) => (
                       <Link
+                        prefetch={false}
                         key={post.slug}
                         href={`/posts/${post.slug}`}
                         className={styles.link}

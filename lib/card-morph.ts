@@ -41,7 +41,6 @@ let destMode: "expand" | "collapse" | null = null;
 let destWatch: ResizeObserver | null = null;
 let destRaf = 0;
 let safetyTimer = 0;
-let pendingTimer = 0;
 let liftTimer = 0;
 
 function reducedMotion() {
@@ -309,13 +308,6 @@ function armSafety() {
   }, DURATION + 240);
 }
 
-function armPendingTimeout() {
-  window.clearTimeout(pendingTimer);
-  pendingTimer = window.setTimeout(() => {
-    if (pendingExpand) commitToLive();
-  }, 2000);
-}
-
 function morphLayer() {
   let layer = document.getElementById("card-morph-layer");
   if (!(layer instanceof HTMLElement)) {
@@ -509,10 +501,8 @@ function bindCommit(anim: Animation) {
 
 function commitToLive() {
   window.clearTimeout(safetyTimer);
-  window.clearTimeout(pendingTimer);
   window.clearTimeout(liftTimer);
   safetyTimer = 0;
-  pendingTimer = 0;
   liftTimer = 0;
   pendingExpand = null;
   pendingCollapse = null;
@@ -550,16 +540,12 @@ export function armCardExpand(slug: string, card: HTMLElement) {
     ? { ...visual, text: title?.text || visual.text }
     : title;
   pendingExpand = { slug, title: start };
-  armPendingTimeout();
+}
 
-  // Covering the clicked title in the same click turn cancels the link default.
-  window.clearTimeout(liftTimer);
-  liftTimer = window.setTimeout(() => {
-    liftTimer = 0;
-    if (pendingExpand?.slug !== slug) return;
-    markExpandMorph();
-    liftTitle(titleEl, start);
-  }, 0);
+export function prepareExpandEnter(slug: string) {
+  if (pendingExpand?.slug !== slug) return false;
+  markExpandMorph();
+  return true;
 }
 
 export function peekPendingExpandSlug() {
@@ -577,6 +563,7 @@ function playTo(
   live: HTMLElement,
   from: TextSnap | null,
   mode: "expand" | "collapse",
+  retries = 8,
 ) {
   const card = live.closest<HTMLElement>(".post-card");
   if (card) {
@@ -596,7 +583,7 @@ function playTo(
       : snapExpandTitleDest(live);
   const start = (flyer && snapOf(flyer)) || lastVisual || from;
   if (!isUsable(dest) || !isUsable(start)) {
-    commitToLive();
+    retryPlayTo(live, from, mode, retries);
     return;
   }
 
@@ -607,8 +594,6 @@ function playTo(
 
   watchDest(live, destCard);
   skipActiveViewTransition();
-  window.clearTimeout(pendingTimer);
-  pendingTimer = 0;
   const anim = animateFlyerTo(dest, remainingMs(), mode);
   if (!anim) {
     commitToLive();
@@ -616,6 +601,25 @@ function playTo(
   }
   armSafety();
   bindCommit(anim);
+}
+
+function retryPlayTo(
+  live: HTMLElement,
+  from: TextSnap | null,
+  mode: "expand" | "collapse",
+  left: number,
+) {
+  if (left <= 0) {
+    commitToLive();
+    return;
+  }
+  requestAnimationFrame(() => {
+    if (!live.isConnected) {
+      commitToLive();
+      return;
+    }
+    playTo(live, from, mode, left - 1);
+  });
 }
 
 export function playExpand(header: HTMLElement, pending: Pending) {

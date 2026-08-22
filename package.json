@@ -10,6 +10,7 @@
     "prebuild": "node scripts/copy-post-assets.mjs",
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/flatten-next-rsc.mjs",
     "start": "next start",
     "lint": "biome lint .",
     "format": "biome check --write .",

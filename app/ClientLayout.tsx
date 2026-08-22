@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { setClientSiteTitle } from "@/lib/site-title";
+import CustomScrollbar from "./components/CustomScrollbar";
 import ReadingProgress from "./components/ReadingProgress";
 import Sidebar from "./components/Sidebar";
 import CardMorphHost from "./CardMorphHost";
@@ -87,6 +88,7 @@ export default function ClientLayout({
     <>
       <NavigationEffects siteTitle={siteTitle} />
       <CardMorphHost />
+      <CustomScrollbar />
       <div className="fluent-bg" aria-hidden="true">
         <span className="fluent-orb fluent-wash fluent-wash-1" />
         <span className="fluent-orb fluent-wash fluent-wash-2" />

@@ -87,6 +87,7 @@ export default function TagsClient({
               style={{ ["--i" as string]: index } as CSSProperties}
             >
               <Link
+                prefetch={false}
                 href={`/tags/${encodeURIComponent(tag.name)}`}
                 className={styles.tagLink}
                 data-page-title={`标签: ${tag.name}`}

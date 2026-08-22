@@ -471,6 +471,7 @@ function Sidebar({
 
       <nav className={styles.nav}>
         <Link
+          prefetch={false}
           href="/"
           className={styles.link}
           title={showText ? undefined : "主页"}
@@ -480,6 +481,7 @@ function Sidebar({
           {renderNavButton(<Home24Regular />, "主页", { asSpan: true })}
         </Link>
         <Link
+          prefetch={false}
           href="/archive"
           className={styles.link}
           title={showText ? undefined : "归档"}
@@ -489,6 +491,7 @@ function Sidebar({
           {renderNavButton(<Library24Regular />, "归档", { asSpan: true })}
         </Link>
         <Link
+          prefetch={false}
           href="/tags"
           className={styles.link}
           title={showText ? undefined : "标签"}
@@ -498,6 +501,7 @@ function Sidebar({
           {renderNavButton(<Tag24Regular />, "标签", { asSpan: true })}
         </Link>
         <Link
+          prefetch={false}
           href="/categories"
           className={styles.link}
           title={showText ? undefined : "分类"}
@@ -507,6 +511,7 @@ function Sidebar({
           {renderNavButton(<Folder24Regular />, "分类", { asSpan: true })}
         </Link>
         <Link
+          prefetch={false}
           href="/about"
           className={styles.link}
           title={showText ? undefined : "关于"}
