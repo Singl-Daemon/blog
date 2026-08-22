@@ -2,7 +2,13 @@
 
 import type { ClipboardEvent, ReactNode } from "react";
 
-export function CodeBlockFrame({ children }: { children: ReactNode }) {
+export function CodeBlockFrame({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const handleSelectionCopy = (event: ClipboardEvent<HTMLDivElement>) => {
     const selection = document.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
@@ -17,7 +23,10 @@ export function CodeBlockFrame({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="code-block-wrapper" onCopy={handleSelectionCopy}>
+    <div
+      className={className ? `code-block-wrapper ${className}` : "code-block-wrapper"}
+      onCopy={handleSelectionCopy}
+    >
       {children}
     </div>
   );

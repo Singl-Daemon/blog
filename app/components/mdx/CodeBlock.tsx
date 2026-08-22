@@ -1,7 +1,4 @@
-import {
-  type HTMLAttributes,
-  useId,
-} from "react";
+import { type HTMLAttributes, useId } from "react";
 import { CodeBlockFrame } from "./CodeBlockFrame";
 import { CopyButton } from "./CopyButton";
 
@@ -36,10 +33,22 @@ export function Pre({ children, ...props }: PreProps) {
   const lang = props["data-language"] || "";
   const rawMeta = props["data-meta"] || props.dataMeta || "";
   const steps = parseStepAnnotations(rawMeta);
+  const hasLineNumbers = /(?:^|\s)showLineNumbers(?:\{\d+\})?(?=\s|$)/.test(
+    rawMeta,
+  );
+  const hideLang = lang === "plaintext" || lang === "text";
+  const frameClass = [
+    steps.length > 0 ? "has-steps" : "",
+    hasLineNumbers ? "has-line-numbers" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <CodeBlockFrame>
-      {lang ? <span className="code-lang-badge">{lang}</span> : null}
+    <CodeBlockFrame className={frameClass || undefined}>
+      {lang && !hideLang ? (
+        <span className="code-lang-badge">{lang}</span>
+      ) : null}
       <CopyButton targetId={id} />
       <pre id={id} {...props}>
         {children}

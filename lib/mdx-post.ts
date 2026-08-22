@@ -15,8 +15,10 @@ import {
   rehypeCodeMeta,
   remarkPreserveMeta,
 } from "@/lib/plugins/rehype-code-meta";
+import { rehypeImageFigure } from "@/lib/plugins/rehype-image-figure";
 import { rehypeImagePaths } from "@/lib/plugins/rehype-image-paths";
 import { parseDirectiveNode } from "@/lib/plugins/remark-directive-rehype";
+import { remarkMermaid } from "@/lib/plugins/remark-mermaid";
 import { getPostData, getPostMtime, getSortedPostsData } from "@/lib/posts";
 import { getAboutMtime } from "@/lib/site";
 
@@ -41,7 +43,10 @@ const prettyCode: PluggableList[number] = [
     keepBackground: false,
     defaultLang: "plaintext",
     filterMetaString: (meta: string) =>
-      meta.replace(/\{"[^"]+?":\s*\d+-\d+\}/g, "").replace(/wrap=\w+/g, ""),
+      meta
+        .replace(/\{"[^"]+?":\s*\d+-\d+\}/g, "")
+        .replace(/wrap=\w+/g, "")
+        .replace(/(?:^|\s)showLineNumbers(?:\{\d+\})?(?=\s|$)/g, ""),
     getHighlighter: (options: Parameters<typeof getSingletonHighlighter>[0]) =>
       getSingletonHighlighter({
         ...options,
@@ -83,6 +88,7 @@ function compileSource(slug: string, source: string) {
           remarkDirective,
           parseDirectiveNode,
           remarkPreserveMeta,
+          remarkMermaid,
         ],
         rehypePlugins: [
           ...(hasMath ? [rehypeKatex] : []),
@@ -109,6 +115,7 @@ function compileSource(slug: string, source: string) {
               basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
             },
           ],
+          rehypeImageFigure,
         ] satisfies PluggableList,
       },
     },

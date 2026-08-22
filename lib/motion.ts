@@ -1,4 +1,4 @@
-import { capturePageEnter } from "@/lib/page-motion";
+import { resetPageEnter } from "@/lib/page-motion";
 
 export function skipActiveViewTransition() {
   const vt = document.activeViewTransition;
@@ -7,7 +7,7 @@ export function skipActiveViewTransition() {
 
 export function interruptPageMotion() {
   skipActiveViewTransition();
-  capturePageEnter();
+  resetPageEnter();
 }
 
 export function replaceUrlPreservingHistory(url: string) {

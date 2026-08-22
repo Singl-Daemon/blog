@@ -82,6 +82,12 @@ function playEnter(el: HTMLElement, from: EnterSnap, duration: number) {
   anim.addEventListener("cancel", settle);
 }
 
+export function resetPageEnter() {
+  handoff = null;
+  handoffDuration = null;
+  clearPageEnterFlag();
+}
+
 export function markMorphEnter() {
   handoff = null;
   handoffDuration = null;

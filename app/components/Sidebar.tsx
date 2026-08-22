@@ -30,8 +30,9 @@ const useStyles = makeStyles({
   nav: {
     display: "flex",
     flexDirection: "column",
+    alignItems: "stretch",
     gap: "6px",
-    marginTop: "24px",
+    marginTop: "0px",
     width: "100%",
   },
   link: {
@@ -105,12 +106,17 @@ function Sidebar({
   const { theme, isOverride, setTheme, resetTheme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const [skipWidth, setSkipWidth] = useState(false);
+  const [iconOnly, setIconOnly] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const [themePos, setThemePos] = useState({ top: 0, left: 0 });
   const themeBtnRef = useRef<HTMLDivElement>(null);
   const themePopoverRef = useRef<HTMLDivElement>(null);
   const asideRef = useRef<HTMLElement>(null);
+  const profileInnerRef = useRef<HTMLDivElement>(null);
+  const [profileH, setProfileH] = useState(156);
+  const [railInnerW, setRailInnerW] = useState(244);
+  const [profileContentW, setProfileContentW] = useState(160);
   const onCloseRef = useRef(onClose);
   const isMobileRef = useRef(false);
   onCloseRef.current = onClose;
@@ -143,6 +149,73 @@ function Sidebar({
   const showText = isDesktopExpanded || isMobile;
   const skipMotion = !allowMotion;
   const fluentEase = "0.4s cubic-bezier(0.16, 1, 0.3, 1)";
+  const profileScale = Math.min(1, railInnerW / Math.max(profileContentW, 1));
+  const railProgress = isMobile
+    ? 1
+    : Math.min(1, Math.max(0, (railInnerW - 44) / (272 - 44)));
+  const profileLayoutH = profileH * railProgress;
+  const profileMargin = 16 * railProgress;
+
+  useLayoutEffect(() => {
+    const el = profileInnerRef.current;
+    if (!el) return;
+    const update = () => {
+      const h = el.scrollHeight;
+      const w = el.scrollWidth;
+      if (h > 0) setProfileH(h);
+      if (w > 0) setProfileContentW(Math.max(120, w));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = asideRef.current;
+    if (!el) return;
+    const update = () => {
+      const cs = getComputedStyle(el);
+      const pl = Number.parseFloat(cs.paddingLeft) || 0;
+      const pr = Number.parseFloat(cs.paddingRight) || 0;
+      setRailInnerW(Math.max(0, el.clientWidth - pl - pr));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isMobile || isDesktopExpanded) {
+      setIconOnly(false);
+      return;
+    }
+    if (!allowMotion) {
+      setIconOnly(true);
+      return;
+    }
+    const el = asideRef.current;
+    if (!el) {
+      setIconOnly(true);
+      return;
+    }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      setIconOnly(true);
+    };
+    const onEnd = (event: TransitionEvent) => {
+      if (event.target === el && event.propertyName === "width") finish();
+    };
+    el.addEventListener("transitionend", onEnd);
+    const timer = window.setTimeout(finish, 620);
+    return () => {
+      el.removeEventListener("transitionend", onEnd);
+      window.clearTimeout(timer);
+    };
+  }, [isDesktopExpanded, isMobile, allowMotion]);
   const offScreen = isMobile && !isOpen;
   const themeLabel = !isOverride
     ? "跟随系统"
@@ -150,6 +223,9 @@ function Sidebar({
       ? "暗色模式"
       : "亮色模式";
   const themeValue = !isOverride ? "system" : theme;
+
+  const openThemeMenu = () => setThemeOpen(true);
+  const closeThemeMenu = () => setThemeOpen(false);
 
   useLayoutEffect(() => {
     if (!themeOpen) return;
@@ -214,9 +290,9 @@ function Sidebar({
     display: "flex",
     flexDirection: "column",
     paddingTop: isMobile ? "32px" : "24px",
-    paddingRight: showText ? "18px" : "14px",
+    paddingRight: isMobile ? "18px" : "14px",
     paddingBottom: "32px",
-    paddingLeft: showText ? "18px" : "14px",
+    paddingLeft: isMobile ? "18px" : "14px",
     background: "var(--color-surface)",
     backdropFilter: "blur(20px) saturate(150%)",
     WebkitBackdropFilter: "blur(20px) saturate(150%)",
@@ -229,7 +305,6 @@ function Sidebar({
       ? "none"
       : [
           skipWidth ? null : `width ${fluentEase}`,
-          skipWidth ? null : `padding ${fluentEase}`,
           "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           "background 0.35s ease",
@@ -259,7 +334,7 @@ function Sidebar({
     flexShrink: 1,
     transition: skipMotion
       ? "none"
-      : `max-width ${fluentEase}, opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1)`,
+      : `opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width ${fluentEase}`,
   };
 
   const renderNavButton = (
@@ -274,7 +349,7 @@ function Sidebar({
       as={(asSpan ? "span" : "button") as "button"}
       icon={icon}
       appearance="subtle"
-      className={`${styles.navButton} sidebar-nav-btn${showText ? "" : " is-icon-only"}`}
+      className={`${styles.navButton} sidebar-nav-btn${iconOnly ? " is-icon-only" : ""}`}
       onClick={onClick}
       aria-label={text}
       role={asSpan ? "presentation" : undefined}
@@ -299,7 +374,7 @@ function Sidebar({
   const applyTheme = (value: "light" | "dark" | "system") => {
     if (value === "system") resetTheme();
     else setTheme(value);
-    setThemeOpen(false);
+    closeThemeMenu();
     if (isMobile) onClose();
   };
 
@@ -316,7 +391,7 @@ function Sidebar({
   return (
     <aside
       ref={asideRef}
-      className={`blog-sidebar${isOpen ? " is-open" : ""}${skipMotion ? " no-motion" : ""}${showText ? "" : " is-collapsed"}`}
+      className={`blog-sidebar${isOpen ? " is-open" : ""}${skipMotion ? " no-motion" : ""}${iconOnly ? " is-collapsed" : ""}`}
       style={sidebarStyle}
       aria-hidden={isMobile && !isOpen}
       inert={isMobile && !isOpen ? true : undefined}
@@ -336,7 +411,7 @@ function Sidebar({
           <Button
             appearance="subtle"
             icon={<Navigation24Regular fontSize={28} />}
-            className={`${styles.toggleBtn}${showText ? "" : " is-icon-only"}`}
+            className={`${styles.toggleBtn}${iconOnly ? " is-icon-only" : ""}`}
             onClick={onToggleDesktop}
             aria-label={isDesktopExpanded ? "折叠侧边栏" : "展开侧边栏"}
           />
@@ -344,40 +419,55 @@ function Sidebar({
       ) : null}
 
       <div
-        className="sidebar-profile"
+        className={`sidebar-profile${showText ? "" : " is-fading"}`}
         aria-hidden={!showText}
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "16px",
+          position: "relative",
+          zIndex: 2,
+          minHeight: 0,
           flexShrink: 0,
-          maxHeight: showText ? "220px" : "0px",
-          opacity: showText ? 1 : 0,
-          overflow: "hidden",
+          height: profileLayoutH,
           pointerEvents: showText ? "auto" : "none",
-          marginTop: showText ? "16px" : "0px",
-          transition: skipMotion
-            ? "none"
-            : `max-height ${fluentEase}, opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin-top ${fluentEase}`,
+          marginTop: profileMargin,
         }}
       >
         <div
+          ref={profileInnerRef}
+          className="sidebar-profile-inner"
           style={{
-            width: "120px",
-            height: "120px",
-            flexShrink: 0,
-            borderRadius: "50%",
-            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+            transform: `scale(${profileScale})`,
+            transformOrigin: "top center",
           }}
         >
-          <Avatar name={authorName} image={{ src: authorAvatar }} size={120} />
+          <div
+            style={{
+              width: "120px",
+              height: "120px",
+              flexShrink: 0,
+              borderRadius: "50%",
+              overflow: "hidden",
+            }}
+          >
+            <Avatar
+              name={authorName}
+              image={{ src: authorAvatar }}
+              size={120}
+            />
+          </div>
+          <Title3
+            style={{
+              whiteSpace: "nowrap",
+              fontSize: "18px",
+              fontWeight: 700,
+            }}
+          >
+            {siteTitle}
+          </Title3>
         </div>
-        <Title3
-          style={{ whiteSpace: "nowrap", fontSize: "18px", fontWeight: 700 }}
-        >
-          {siteTitle}
-        </Title3>
       </div>
 
       <nav className={styles.nav}>
@@ -440,7 +530,7 @@ function Sidebar({
           style={{
             width: "100%",
             display: "flex",
-            justifyContent: showText ? "stretch" : "center",
+            justifyContent: iconOnly ? "center" : "stretch",
           }}
         >
           {renderNavButton(
@@ -452,7 +542,7 @@ function Sidebar({
               <WeatherSunny24Regular />
             ),
             themeLabel,
-            { onClick: () => setThemeOpen((prev) => !prev) },
+            { onClick: () => (themeOpen ? closeThemeMenu() : openThemeMenu()) },
           )}
         </div>
       </div>
@@ -466,6 +556,7 @@ function Sidebar({
               role="menu"
               aria-hidden={!themeOpen}
             >
+              <div className="theme-menu-glass" aria-hidden="true" />
               {themeItems.map((item) => {
                 const checked = themeValue === item.value;
                 return (

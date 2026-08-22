@@ -1,4 +1,5 @@
 import { Children, type ReactNode } from "react";
+import { isExternalHref } from "./mdx-utils";
 
 const typeConfig: Record<
   string,
@@ -36,18 +37,57 @@ const typeConfig: Record<
   },
 };
 
-interface AdmonitionProps {
+interface AdmonitionCite {
+  author?: string;
+  source?: string;
+  href?: string;
+}
+
+interface AdmonitionProps extends AdmonitionCite {
   type: string;
   children?: ReactNode;
   title?: string;
 }
 
-function AdmonitionBase({ type, children, title }: AdmonitionProps) {
+function CiteFooter({ author, source, href }: AdmonitionCite) {
+  if (!author && !source) return null;
+
+  const sourceNode =
+    source && href ? (
+      isExternalHref(href) ? (
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          {source}
+        </a>
+      ) : (
+        <a href={href}>{source}</a>
+      )
+    ) : source ? (
+      <span>{source}</span>
+    ) : null;
+
+  return (
+    <footer className="admonition-cite">
+      {author ? <cite>{author}</cite> : null}
+      {author && sourceNode ? <span aria-hidden="true"> · </span> : null}
+      {sourceNode}
+    </footer>
+  );
+}
+
+function AdmonitionBase({
+  type,
+  children,
+  title,
+  author,
+  source,
+  href,
+}: AdmonitionProps) {
   const config = typeConfig[type] || typeConfig.note;
 
   return (
     <blockquote
       className={`admonition bdm-${type}`}
+      cite={href}
       style={{
         position: "relative",
         margin: "20px 0",
@@ -98,64 +138,61 @@ function AdmonitionBase({ type, children, title }: AdmonitionProps) {
         {title || config.label}
       </span>
       {children}
+      <CiteFooter author={author} source={source} href={href} />
     </blockquote>
   );
 }
 
-interface AdmonitionBlockProps {
+interface AdmonitionBlockProps extends AdmonitionCite {
   children?: ReactNode;
   title?: string;
   "has-directive-label"?: boolean;
 }
 
-export function Note({ children, title, ...props }: AdmonitionBlockProps) {
-  const hasLabel = Boolean(props["has-directive-label"]);
+export function Note(props: AdmonitionBlockProps) {
+  return labeledBlock("note", props);
+}
+
+function labeledBlock(
+  type: string,
+  {
+    children,
+    title,
+    label,
+    author,
+    source,
+    href,
+    "has-directive-label": labeled,
+  }: AdmonitionBlockProps & { label?: string },
+) {
   const childArray = Children.toArray(children);
-  const labelTitle = hasLabel ? childArray[0] : undefined;
-  const restChildren = hasLabel ? childArray.slice(1) : children;
-
+  const hasLabel = Boolean(labeled);
+  const heading = label || title;
   return (
-    <AdmonitionBase type="note" title={labelTitle ? undefined : title}>
-      {hasLabel ? (
-        <>
-          <div style={{ display: "none" }}>{labelTitle}</div>
-          {restChildren}
-        </>
-      ) : (
-        children
-      )}
+    <AdmonitionBase
+      type={type}
+      title={heading}
+      author={author}
+      source={source}
+      href={href}
+    >
+      {hasLabel ? childArray.slice(1) : children}
     </AdmonitionBase>
   );
 }
 
-export function Tip({ children, title }: AdmonitionBlockProps) {
-  return (
-    <AdmonitionBase type="tip" title={title}>
-      {children}
-    </AdmonitionBase>
-  );
+export function Tip(props: AdmonitionBlockProps) {
+  return labeledBlock("tip", props);
 }
 
-export function Important({ children, title }: AdmonitionBlockProps) {
-  return (
-    <AdmonitionBase type="important" title={title}>
-      {children}
-    </AdmonitionBase>
-  );
+export function Important(props: AdmonitionBlockProps) {
+  return labeledBlock("important", props);
 }
 
-export function Warning({ children, title }: AdmonitionBlockProps) {
-  return (
-    <AdmonitionBase type="warning" title={title}>
-      {children}
-    </AdmonitionBase>
-  );
+export function Warning(props: AdmonitionBlockProps) {
+  return labeledBlock("warning", props);
 }
 
-export function Caution({ children, title }: AdmonitionBlockProps) {
-  return (
-    <AdmonitionBase type="caution" title={title}>
-      {children}
-    </AdmonitionBase>
-  );
+export function Caution(props: AdmonitionBlockProps) {
+  return labeledBlock("caution", props);
 }

@@ -25,7 +25,9 @@ validityCheck: true
 
 GPU 分区 (`GPU-P`) 通过将 GPU 资源"切块"，来给一个或者多个虚拟机使用。
 
-> 社区有时会把 GPU-P 也称为"`GPU Passthrough`"，但严格来说 `Passthrough` 更常指 `DDA`（直通整卡）。
+:::quote{source="社区习惯"}
+社区有时会把 GPU-P 也称为"`GPU Passthrough`"，但严格来说 `Passthrough` 更常指 `DDA`（直通整卡）。
+:::
 
 本文将在 Windows 11 Pro 主机上，使用 Hyper-V 的 GPU 分区 (`GPU-P`) 功能，将 NVIDIA GeForce RTX 4070 Laptop 显卡的部分资源分配给 Windows 11 虚拟机使用。
 
@@ -119,7 +121,9 @@ IsDeleted                     : False
 
 在弹出的窗口中，切换到"详细信息"选项卡，在属性下拉菜单中选择"设备实例路径"。
 
+:::figure[设备管理器中查看 GPU 的设备实例路径]
 ![device-instance-path](assets/gpu-details.png)
+:::
 
 如图所示，本人的 NVIDIA GeForce RTX 4070 Laptop 显卡的设备实例路径为:
 
@@ -164,20 +168,17 @@ Set-VM -HighMemoryMappedIoSpace   32GB  -VMName $vm
 
 关于缓存和 `MMIO` 的一些常见问题，请参阅[常见问题](#常见问题)。
 
-:::warning
+:::warning{author="Microsoft" source="Windows 驱动程序开发" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgkarg_getvirtualgpuprofile#members"}
 如果你正在 Windows Server 上配置，那么你现在是打不开虚拟机的。
 
 由于 Microsoft 的 `SecureDeviceAssignment` 和 `SupportedDeviceAssignment`，你需要添加两个注册表项才能继续。
 
-> 摘自[Windows 驱动程序开发 - Microsoft Docs](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgkarg_getvirtualgpuprofile#members)
-
 使用 Powershell 运行这些命令即可添加注册表项。
 
-```powershell
+```powershell title="Windows 驱动程序开发"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\HyperV" -Name "RequireSecureDeviceAssignment" -Type DWORD -Value 0 -Force
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\HyperV" -Name "RequireSupportedDeviceAssignment" -Type DWORD -Value 0 -Force
 ```
-
 :::
 
 ## 复制设备驱动
@@ -192,8 +193,10 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\HyperV" -Name 
 
 找到你的 GPU 驱动(这一步可以使用 `dxdiag` 查询)，然后把整个文件夹拷到虚拟机备用。
 
-> 如果你觉得有点麻烦，那你可以使用 [DISM++](https://github.com/Chuyu-Team/Dism-Multi-language/releases/latest) 来自动提取 GPU 驱动。  
+> 如果你觉得有点麻烦，那你可以使用 DISM++ 来自动提取 GPU 驱动。  
 > 如果你连这都嫌麻烦，那你干脆把所有驱动全拷出来也行。
+
+::github{repo="Chuyu-Team/Dism-Multi-language"}
 
 之后前往虚拟机的`C:\Windows\System32\HostDriverStore\FileRepository\`文件夹。
 
@@ -213,24 +216,26 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\HyperV" -Name 
 
 ### GuestControlledCacheTypes 是什么？
 
-摘自 [Microsoft Community Hub](https://techcommunity.microsoft.com/t5/Virtualization/Discrete-Device-Assignment-GPUs/ba-p/382266):
-
-> 如果处理器能够以一种模式运行，使其在将数据写入内存之前，先把视频内存中的数据在处理器缓存中暂存，以便合并对同一内存的其他写入，那么 GPU 往往会快得多。
-> 这称为“写合并”（write-combining）。
+:::quote{source="Microsoft Community Hub" href="https://techcommunity.microsoft.com/t5/Virtualization/Discrete-Device-Assignment-GPUs/ba-p/382266"}
+如果处理器能够以一种模式运行，使其在将数据写入内存之前，先把视频内存中的数据在处理器缓存中暂存，以便合并对同一内存的其他写入，那么 GPU 往往会快得多。
+这称为“写合并”（write-combining）。
+:::
 
 启用后通常能获得更好的 GPU 性能，推荐开启。
 
 ### LowMemoryMappedIoSpace 和 HighMemoryMappedIoSpace 是什么？我该怎么填写大小？
 
-摘自 [Microsoft Docs](https://learn.microsoft.com/zh-cn/windows-server/virtualization/hyper-v/plan/plan-for-deploying-devices-using-discrete-device-assignment#mmio-space):
+:::quote{author="Microsoft" source="Microsoft Docs" href="https://learn.microsoft.com/zh-cn/windows-server/virtualization/hyper-v/plan/plan-for-deploying-devices-using-discrete-device-assignment#mmio-space"}
+某些设备（尤其是 GPU）需要为 VM 分配更多的 `MMIO` 空间，以便可以访问该设备的内存。  
+默认情况下，最初为每个 VM 分配 128 MB 的低 `MMIO` 空间和 512 MB 的高 `MMIO` 空间。  
+但是，某个设备可能需要更多 `MMIO` 空间，或者可能有多个设备直通，因而各种要求导致超过了这些值。
+低 `MMIO` 空间仅由 32 位操作系统和使用 32 位地址的设备使用。  
+在大多数情况下，设置 VM 的高 `MMIO` 空间就足够了，因为 32 位配置并不常见。
+:::
 
-> 某些设备（尤其是 GPU）需要为 VM 分配更多的 `MMIO` 空间，以便可以访问该设备的内存。  
-> 默认情况下，最初为每个 VM 分配 128 MB 的低 `MMIO` 空间和 512 MB 的高 `MMIO` 空间。  
-> 但是，某个设备可能需要更多 `MMIO` 空间，或者可能有多个设备直通，因而各种要求导致超过了这些值。
-> 低 `MMIO` 空间仅由 32 位操作系统和使用 32 位地址的设备使用。  
-> 在大多数情况下，设置 VM 的高 `MMIO` 空间就足够了，因为 32 位配置并不常见。
+Microsoft 推荐使用 SurveyDDA.ps1 来查询设备的 `MMIO` 相关信息。
 
-Microsoft 推荐使用[SurveyDDA.ps1](https://github.com/Microsoft/Virtualization-Documentation/blob/live/hyperv-tools/DiscreteDeviceAssignment/SurveyDDA.ps1)来查询设备的 `MMIO` 相关信息。
+::link{href="https://github.com/Microsoft/Virtualization-Documentation/blob/live/hyperv-tools/DiscreteDeviceAssignment/SurveyDDA.ps1" title="SurveyDDA.ps1" desc="查询直通设备所需的最小 MMIO 空间"}
 
 :::important
 如果你的设备无法通过`SurveyDDA.ps1`查询最小 `MMIO` 空间，  

@@ -124,6 +124,7 @@ export function TocFab({
           height: { duration, ease: TOC_EASE },
         }}
       >
+        <div className="toc-shell-glass" aria-hidden="true" />
         <nav ref={bodyRef} className="toc-body" aria-hidden={!open}>
           <div className="toc-title">目录</div>
           {toc.map((item) => (

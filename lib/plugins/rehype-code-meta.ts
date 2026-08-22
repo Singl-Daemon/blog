@@ -42,6 +42,22 @@ export function rehypeCodeMeta() {
 
       node.properties ??= {};
       node.properties.dataMeta = meta;
+
+      // filterMetaString strips showLineNumbers so it cannot leak into titles.
+      // Re-apply the pretty-code line-number hook from the preserved raw meta.
+      const lineNumbers = meta.match(
+        /(?:^|\s)showLineNumbers(?:\{(\d+)\})?(?=\s|$)/,
+      );
+      if (!lineNumbers) return;
+
+      codeEl.properties ??= {};
+      codeEl.properties.dataLineNumbers = "";
+      if (lineNumbers[1]) {
+        const startAt = Number.parseInt(lineNumbers[1], 10) - 1;
+        const prev = String(codeEl.properties.style ?? "");
+        const prefix = prev && !prev.endsWith(";") ? `${prev};` : prev;
+        codeEl.properties.style = `${prefix}counter-set: line ${startAt};`;
+      }
     });
   };
 }

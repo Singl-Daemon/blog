@@ -1,9 +1,17 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 /**
- * Keep a remounting template so page CSS enter animations restart,
- * without a View Transition snapshot overlay that blocks sidebar clicks.
+ * Remount page contents on each route so CSS enter animations restart.
+ * display:contents keeps this wrapper out of layout.
  */
 export default function Template({ children }: { children: ReactNode }) {
-  return children;
+  const pathname = usePathname();
+  return (
+    <div key={pathname} style={{ display: "contents" }}>
+      {children}
+    </div>
+  );
 }
