@@ -150,11 +150,7 @@ function Sidebar({
   const skipMotion = !allowMotion;
   const fluentEase = "0.4s cubic-bezier(0.16, 1, 0.3, 1)";
   const profileScale = Math.min(1, railInnerW / Math.max(profileContentW, 1));
-  const railProgress = isMobile
-    ? 1
-    : Math.min(1, Math.max(0, (railInnerW - 44) / (272 - 44)));
-  const profileLayoutH = profileH * railProgress;
-  const profileMargin = 16 * railProgress;
+  const skipProfileMotion = skipMotion || skipWidth;
 
   useLayoutEffect(() => {
     const el = profileInnerRef.current;
@@ -334,7 +330,7 @@ function Sidebar({
     flexShrink: 1,
     transition: skipMotion
       ? "none"
-      : `opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width ${fluentEase}`,
+      : `max-width ${fluentEase}, opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1)`,
   };
 
   const renderNavButton = (
@@ -426,9 +422,12 @@ function Sidebar({
           zIndex: 2,
           minHeight: 0,
           flexShrink: 0,
-          height: profileLayoutH,
+          height: showText ? profileH : 0,
           pointerEvents: showText ? "auto" : "none",
-          marginTop: profileMargin,
+          marginTop: showText ? 16 : 0,
+          transition: skipProfileMotion
+            ? "none"
+            : `height ${fluentEase}, margin-top ${fluentEase}`,
         }}
       >
         <div

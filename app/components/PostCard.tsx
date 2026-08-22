@@ -152,11 +152,13 @@ function PostCardComponent({
     : "var(--color-text-secondary)";
 
   const onNavigate = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!fromHome) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;
     }
+    if (!fromHome) return;
+    event.preventDefault();
     armCardExpand(post.slug, event.currentTarget);
+    router.push(`/posts/${post.slug}`);
   };
 
   return (

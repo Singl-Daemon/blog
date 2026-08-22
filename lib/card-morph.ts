@@ -1,3 +1,4 @@
+import { skipActiveViewTransition } from "@/lib/motion";
 import { capturePageEnter, markMorphEnter } from "@/lib/page-motion";
 
 const EASE_MOVE = "cubic-bezier(0.22, 0.82, 0.24, 1)";
@@ -39,6 +40,9 @@ let destSnap: TextSnap | null = null;
 let destMode: "expand" | "collapse" | null = null;
 let destWatch: ResizeObserver | null = null;
 let destRaf = 0;
+let safetyTimer = 0;
+let pendingTimer = 0;
+let liftTimer = 0;
 
 function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -298,6 +302,20 @@ function adoptFluentTokens(target: HTMLElement) {
   }
 }
 
+function armSafety() {
+  window.clearTimeout(safetyTimer);
+  safetyTimer = window.setTimeout(() => {
+    commitToLive();
+  }, DURATION + 240);
+}
+
+function armPendingTimeout() {
+  window.clearTimeout(pendingTimer);
+  pendingTimer = window.setTimeout(() => {
+    if (pendingExpand) commitToLive();
+  }, 2000);
+}
+
 function morphLayer() {
   let layer = document.getElementById("card-morph-layer");
   if (!(layer instanceof HTMLElement)) {
@@ -305,7 +323,15 @@ function morphLayer() {
     layer.id = "card-morph-layer";
     layer.className = "card-morph-layer";
     layer.setAttribute("aria-hidden", "true");
-    document.documentElement.appendChild(layer);
+    layer.style.position = "fixed";
+    layer.style.left = "0";
+    layer.style.top = "0";
+    layer.style.width = "0";
+    layer.style.height = "0";
+    layer.style.overflow = "visible";
+    layer.style.pointerEvents = "none";
+    layer.style.zIndex = "40";
+    (document.body ?? document.documentElement).appendChild(layer);
     adoptFluentTokens(layer);
   }
   return layer;
@@ -343,6 +369,7 @@ function dropFlyer() {
   flyer?.remove();
   flyer = null;
   lastVisual = null;
+  document.getElementById("card-morph-layer")?.remove();
 }
 
 function liftTitle(el: Element | null, snap: TextSnap | null) {
@@ -481,6 +508,12 @@ function bindCommit(anim: Animation) {
 }
 
 function commitToLive() {
+  window.clearTimeout(safetyTimer);
+  window.clearTimeout(pendingTimer);
+  window.clearTimeout(liftTimer);
+  safetyTimer = 0;
+  pendingTimer = 0;
+  liftTimer = 0;
   pendingExpand = null;
   pendingCollapse = null;
   if (destLive?.isConnected && flyer) {
@@ -506,7 +539,7 @@ export function armCardExpand(slug: string, card: HTMLElement) {
     pendingExpand = null;
     return;
   }
-  markExpandMorph();
+  skipActiveViewTransition();
   pendingCollapse = null;
   stopDestWatch();
   const visual = freezeFlyer();
@@ -517,7 +550,16 @@ export function armCardExpand(slug: string, card: HTMLElement) {
     ? { ...visual, text: title?.text || visual.text }
     : title;
   pendingExpand = { slug, title: start };
-  liftTitle(titleEl, start);
+  armPendingTimeout();
+
+  // Covering the clicked title in the same click turn cancels the link default.
+  window.clearTimeout(liftTimer);
+  liftTimer = window.setTimeout(() => {
+    liftTimer = 0;
+    if (pendingExpand?.slug !== slug) return;
+    markExpandMorph();
+    liftTitle(titleEl, start);
+  }, 0);
 }
 
 export function peekPendingExpandSlug() {
@@ -564,11 +606,15 @@ function playTo(
   applyFlyerLines(node, dest.lines, dest.text);
 
   watchDest(live, destCard);
+  skipActiveViewTransition();
+  window.clearTimeout(pendingTimer);
+  pendingTimer = 0;
   const anim = animateFlyerTo(dest, remainingMs(), mode);
   if (!anim) {
     commitToLive();
     return;
   }
+  armSafety();
   bindCommit(anim);
 }
 
