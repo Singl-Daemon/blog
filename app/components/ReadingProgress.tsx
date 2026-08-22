@@ -25,7 +25,7 @@ export default function ReadingProgress() {
   const pathname = usePathname();
   const barRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
-  const active = pathname.startsWith("/posts/");
+  const postPath = pathname.startsWith("/posts/") ? pathname : "";
 
   useLayoutEffect(() => {
     const bar = barRef.current;
@@ -42,7 +42,7 @@ export default function ReadingProgress() {
       }
     };
 
-    if (!active) {
+    if (!postPath) {
       host.hidden = true;
       apply(0, true);
       return;
@@ -74,14 +74,14 @@ export default function ReadingProgress() {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };
-  }, [active, pathname]);
+  }, [postPath]);
 
   return (
     <div
       ref={hostRef}
       className="reading-progress"
       hidden
-      aria-hidden={!active}
+      aria-hidden={!postPath}
     >
       <div
         ref={barRef}
