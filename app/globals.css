@@ -134,6 +134,7 @@ html[data-theme="dark"] {
 *::before,
 *::after {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Overlay scrollbar (fuwari-like): hide native bars on hosts we paint. */
