@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   output: "export",
   basePath,
   assetPrefix: basePath,
+  experimental: {
+    optimizePackageImports: [
+      "@fluentui/react-components",
+      "@fluentui/react-icons",
+    ],
+  },
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

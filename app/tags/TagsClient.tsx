@@ -89,6 +89,7 @@ export default function TagsClient({
               <Link
                 href={`/tags/${encodeURIComponent(tag.name)}`}
                 className={styles.tagLink}
+                data-page-title={`标签: ${tag.name}`}
               >
                 <Tag24Regular
                   fontSize={16}

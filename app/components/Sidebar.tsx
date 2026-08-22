@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import {
   type CSSProperties,
+  memo,
   type ReactElement,
   useEffect,
   useLayoutEffect,
@@ -90,7 +91,7 @@ interface SidebarProps {
   authorAvatar: string;
 }
 
-export default function Sidebar({
+function Sidebar({
   isOpen,
   onClose,
   onToggleDesktop,
@@ -152,14 +153,11 @@ export default function Sidebar({
 
   useLayoutEffect(() => {
     if (!themeOpen) return;
-    let raf = 0;
+
     const place = () => {
       const anchorEl = themeBtnRef.current;
       const menuEl = themePopoverRef.current;
-      if (!anchorEl || !menuEl) {
-        raf = window.requestAnimationFrame(place);
-        return;
-      }
+      if (!anchorEl || !menuEl) return;
       const anchor = anchorEl.getBoundingClientRect();
       const mw = menuEl.offsetWidth;
       const mh = menuEl.offsetHeight;
@@ -176,10 +174,17 @@ export default function Sidebar({
       setThemePos((prev) =>
         prev.top === top && prev.left === left ? prev : { top, left },
       );
-      raf = window.requestAnimationFrame(place);
     };
+
     place();
-    return () => window.cancelAnimationFrame(raf);
+    const raf = window.requestAnimationFrame(place);
+    window.addEventListener("resize", place);
+    document.addEventListener("scroll", place, true);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", place);
+      document.removeEventListener("scroll", place, true);
+    };
   }, [themeOpen]);
 
   useEffect(() => {
@@ -380,6 +385,7 @@ export default function Sidebar({
           href="/"
           className={styles.link}
           title={showText ? undefined : "主页"}
+          data-page-title={siteTitle}
           onClick={isMobile ? onClose : undefined}
         >
           {renderNavButton(<Home24Regular />, "主页", { asSpan: true })}
@@ -388,6 +394,7 @@ export default function Sidebar({
           href="/archive"
           className={styles.link}
           title={showText ? undefined : "归档"}
+          data-page-title="归档"
           onClick={isMobile ? onClose : undefined}
         >
           {renderNavButton(<Library24Regular />, "归档", { asSpan: true })}
@@ -396,6 +403,7 @@ export default function Sidebar({
           href="/tags"
           className={styles.link}
           title={showText ? undefined : "标签"}
+          data-page-title="标签"
           onClick={isMobile ? onClose : undefined}
         >
           {renderNavButton(<Tag24Regular />, "标签", { asSpan: true })}
@@ -404,6 +412,7 @@ export default function Sidebar({
           href="/categories"
           className={styles.link}
           title={showText ? undefined : "分类"}
+          data-page-title="分类"
           onClick={isMobile ? onClose : undefined}
         >
           {renderNavButton(<Folder24Regular />, "分类", { asSpan: true })}
@@ -412,6 +421,7 @@ export default function Sidebar({
           href="/about"
           className={styles.link}
           title={showText ? undefined : "关于"}
+          data-page-title="关于"
           onClick={isMobile ? onClose : undefined}
         >
           {renderNavButton(<Person24Regular />, "关于", { asSpan: true })}
@@ -483,3 +493,5 @@ export default function Sidebar({
     </aside>
   );
 }
+
+export default memo(Sidebar);

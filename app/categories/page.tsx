@@ -1,15 +1,23 @@
-import { getAllCategories, getSortedPostsData } from "@/lib/posts";
+import { pageMetadata } from "@/lib/metadata";
+import { getCategoriesWithPosts } from "@/lib/posts";
 import { getSiteConfig } from "@/lib/site";
 import CategoriesClient from "./CategoriesClient";
 
-export default function CategoriesPage() {
-  const categories = getAllCategories();
-  const allPosts = getSortedPostsData();
+export function generateMetadata() {
+  const categoryData = getCategoriesWithPosts();
   const site = getSiteConfig();
-  const categoryData = categories.map((cat) => ({
-    ...cat,
-    posts: allPosts.filter((post) => (post.category || "未分类") === cat.name),
-  }));
+  return pageMetadata(
+    site.pages.categories.title,
+    site.pages.categories.descriptionTemplate.replace(
+      "{count}",
+      String(categoryData.length),
+    ),
+  );
+}
+
+export default function CategoriesPage() {
+  const categoryData = getCategoriesWithPosts();
+  const site = getSiteConfig();
 
   return (
     <CategoriesClient
@@ -17,7 +25,7 @@ export default function CategoriesPage() {
       pageTitle={site.pages.categories.title}
       pageDescription={site.pages.categories.descriptionTemplate.replace(
         "{count}",
-        String(categories.length),
+        String(categoryData.length),
       )}
     />
   );

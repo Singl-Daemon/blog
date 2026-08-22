@@ -1,18 +1,19 @@
-import { MDXRemote } from "next-mdx-remote/rsc";
-import remarkGfm from "remark-gfm";
+import { compileAboutMdx } from "@/lib/mdx-post";
+import { pageMetadata } from "@/lib/metadata";
 import { getAboutPageData, getSiteConfig } from "@/lib/site";
 import AboutClient from "./AboutClient";
 
-export default function AboutPage() {
+export function generateMetadata() {
+  const site = getSiteConfig();
+  return pageMetadata(site.pages.about.title, site.pages.about.description);
+}
+
+export default async function AboutPage() {
   const site = getSiteConfig();
   const about = getAboutPageData();
-
-  const mdxContent = about.content.trim() ? (
-    <MDXRemote
-      source={about.content}
-      options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
-    />
-  ) : null;
+  const mdxContent = about.content.trim()
+    ? await compileAboutMdx(about.content)
+    : null;
 
   return (
     <AboutClient

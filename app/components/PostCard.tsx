@@ -5,11 +5,13 @@ import {
   Body1,
   Caption1,
   makeStyles,
-  Title3,
   tokens,
 } from "@fluentui/react-components";
 import { ArrowRight24Regular } from "@fluentui/react-icons";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { memo, type MouseEvent } from "react";
+import { armCardExpand } from "@/lib/card-morph";
 import { formatDateLong } from "@/lib/date";
 import type { PostMeta } from "@/lib/posts";
 
@@ -91,10 +93,15 @@ const useStyles = makeStyles({
     color: "#ffffff",
   },
   title: {
+    display: "block",
     fontSize: "22px",
     lineHeight: 1.3,
-    marginBottom: "4px",
+    letterSpacing: "0",
+    margin: "0 0 4px",
+    padding: 0,
+    border: 0,
     fontWeight: 700,
+    textAlign: "left",
   },
   meta: {
     marginBottom: "2px",
@@ -126,8 +133,15 @@ const useStyles = makeStyles({
   },
 });
 
-export function PostCard({ post }: { post: PostMeta }) {
+function PostCardComponent({
+  post,
+  fromHome = false,
+}: {
+  post: PostMeta;
+  fromHome?: boolean;
+}) {
   const styles = useStyles();
+  const router = useRouter();
   const hasCover = Boolean(post.image);
   const titleColor = hasCover ? "#ffffff" : "var(--color-text)";
   const mutedColor = hasCover
@@ -137,8 +151,26 @@ export function PostCard({ post }: { post: PostMeta }) {
     ? "rgba(255,255,255,0.9)"
     : "var(--color-text-secondary)";
 
+  const onNavigate = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!fromHome) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    armCardExpand(post.slug, event.currentTarget);
+  };
+
   return (
-    <Link href={`/posts/${post.slug}`} className={`${styles.card} post-card`}>
+    <Link
+      href={`/posts/${post.slug}`}
+      className={`${styles.card} post-card`}
+      data-post-slug={post.slug}
+      data-page-title={post.title}
+      prefetch
+      onClick={onNavigate}
+      onPointerEnter={() => {
+        if (fromHome) router.prefetch(`/posts/${post.slug}`);
+      }}
+    >
       {hasCover ? (
         <>
           <div
@@ -156,12 +188,21 @@ export function PostCard({ post }: { post: PostMeta }) {
 
       <div
         className={styles.content}
+        data-card-morph-body=""
         style={hasCover ? undefined : { color: "var(--color-text)" }}
       >
-        <Title3 className={styles.title} style={{ color: titleColor }}>
+        <div
+          className={styles.title}
+          data-card-morph-title=""
+          style={{ color: titleColor }}
+        >
           {post.title}
-        </Title3>
-        <Caption1 className={styles.meta} style={{ color: mutedColor }}>
+        </div>
+        <Caption1
+          className={styles.meta}
+          data-card-morph-meta=""
+          style={{ color: mutedColor }}
+        >
           {formatDateLong(post.published)}
           {post.category ? ` · ${post.category}` : ""}
         </Caption1>
@@ -207,3 +248,5 @@ export function PostCard({ post }: { post: PostMeta }) {
     </Link>
   );
 }
+
+export const PostCard = memo(PostCardComponent);

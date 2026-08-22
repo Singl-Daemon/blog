@@ -19,7 +19,7 @@ export function rehypeImagePaths(options: RehypeImagePathsOptions = {}) {
     visit(tree, "element", (node: Element) => {
       if (node.tagName !== "img" || !node.properties?.src) return;
 
-      const src = String(node.properties.src);
+      const src = String(node.properties.src).replace(/^\.\//, "");
       if (
         src.startsWith("/") ||
         src.startsWith("http://") ||

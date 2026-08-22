@@ -2,6 +2,7 @@
 
 import { Body1, makeStyles, Title3, tokens } from "@fluentui/react-components";
 import { useLayoutEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FadeIn } from "@/app/components/FadeIn";
 import { PostCard } from "@/app/components/PostCard";
 import type { PostMeta } from "@/lib/posts";
@@ -33,15 +34,25 @@ export function PostGrid({
   posts,
   emptyTitle = "暂无文章",
   emptyDescription,
+  fromHome = false,
 }: {
   posts: PostMeta[];
   emptyTitle?: string;
   emptyDescription?: string;
+  fromHome?: boolean;
 }) {
   const styles = useStyles();
+  const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
   const oldRectsRef = useRef<DOMRect[] | null>(null);
   const [cols, setCols] = useState<number | null>(null);
+
+  const slugs = posts.map((post) => post.slug).join("\0");
+  useLayoutEffect(() => {
+    for (const slug of slugs.split("\0")) {
+      if (slug) router.prefetch(`/posts/${slug}`);
+    }
+  }, [slugs, router]);
 
   useLayoutEffect(() => {
     const el = gridRef.current;
@@ -64,7 +75,7 @@ export function PostGrid({
     const ro = new ResizeObserver(read);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [posts]);
+  }, [posts.length]);
 
   useLayoutEffect(() => {
     const el = gridRef.current;
@@ -73,6 +84,7 @@ export function PostGrid({
     oldRectsRef.current = null;
 
     const items = [...el.children] as HTMLElement[];
+    const running: Animation[] = [];
     for (let i = 0; i < items.length; i += 1) {
       const item = items[i];
       const old = oldRects[i];
@@ -85,24 +97,22 @@ export function PostGrid({
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.01) {
         continue;
       }
-      item.animate(
-        [
-          {
-            transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-            transformOrigin: "0 0",
-          },
-          { transform: "none", transformOrigin: "0 0" },
-        ],
-        { duration: 420, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+      running.push(
+        item.animate(
+          [
+            {
+              transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
+              transformOrigin: "0 0",
+            },
+            { transform: "none", transformOrigin: "0 0" },
+          ],
+          { duration: 420, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+        ),
       );
     }
 
     return () => {
-      for (const item of items) {
-        for (const animation of item.getAnimations()) {
-          animation.cancel();
-        }
-      }
+      for (const animation of running) animation.cancel();
     };
   }, [cols]);
 
@@ -136,7 +146,7 @@ export function PostGrid({
           className={`${styles.item} stagger-in-item`}
           style={{ ["--i" as string]: index }}
         >
-          <PostCard post={post} />
+          <PostCard post={post} fromHome={fromHome} />
         </div>
       ))}
     </div>

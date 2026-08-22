@@ -16,25 +16,44 @@ interface GithubCardProps {
   children?: ReactNode;
 }
 
+const repoCache = new Map<string, RepoData>();
+
 export function GithubCard({ repo }: GithubCardProps) {
-  const [data, setData] = useState<RepoData | null>(null);
+  const cached = repo ? repoCache.get(repo) : undefined;
+  const [data, setData] = useState<RepoData | null>(cached ?? null);
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
     if (!repo?.includes("/")) return;
+    const hit = repoCache.get(repo);
+    if (hit) {
+      setData(hit);
+      setLoading(false);
+      return;
+    }
+
+    const ac = new AbortController();
     fetch(`https://api.github.com/repos/${repo}`, {
       referrerPolicy: "no-referrer",
+      signal: ac.signal,
     })
-      .then((r) => r.json())
-      .then((d) => {
-        setData(d);
+      .then((response) => {
+        if (!response.ok) throw new Error("GitHub request failed");
+        return response.json() as Promise<RepoData>;
+      })
+      .then((next) => {
+        repoCache.set(repo, next);
+        setData(next);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError(true);
         setLoading(false);
       });
+
+    return () => ac.abort();
   }, [repo]);
 
   if (!repo?.includes("/")) {

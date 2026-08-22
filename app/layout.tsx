@@ -1,4 +1,3 @@
-import "@fontsource-variable/cascadia-code/wght.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSiteConfig } from "@/lib/site";
@@ -12,7 +11,10 @@ const THEME_BOOTSTRAP = `(function(){try{var d=document.documentElement;var over
 export function generateMetadata(): Metadata {
   const site = getSiteConfig();
   return {
-    title: site.title,
+    title: {
+      default: site.title,
+      template: `%s · ${site.title}`,
+    },
     description: site.author.bio,
     icons: {
       icon: [

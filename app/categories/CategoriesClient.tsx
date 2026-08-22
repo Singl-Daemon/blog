@@ -85,7 +85,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: "8px",
-    padding: "4px 0 12px 64px",
+    padding: "4px 0 12px 0",
   },
   articleItem: {
     display: "flex",
@@ -182,6 +182,7 @@ export default function CategoriesClient({
                         key={post.slug}
                         href={`/posts/${post.slug}`}
                         className={styles.link}
+                        data-page-title={post.title}
                       >
                         <div className={`${styles.articleItem} soft-hover`}>
                           {post.image ? (

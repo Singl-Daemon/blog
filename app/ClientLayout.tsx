@@ -3,8 +3,18 @@
 import { Button } from "@fluentui/react-components";
 import { Navigation24Regular } from "@fluentui/react-icons";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useEffect, useLayoutEffect, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
+import { setClientSiteTitle } from "@/lib/site-title";
+import ReadingProgress from "./components/ReadingProgress";
 import Sidebar from "./components/Sidebar";
+import CardMorphHost from "./CardMorphHost";
+import NavigationEffects from "./NavigationEffects";
 
 export default function ClientLayout({
   children,
@@ -17,6 +27,7 @@ export default function ClientLayout({
   authorName: string;
   authorAvatar: string;
 }) {
+  setClientSiteTitle(siteTitle);
   const pathname = usePathname();
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState(false);
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
@@ -43,13 +54,29 @@ export default function ClientLayout({
     setIsSidebarOpenMobile(false);
   }, [pathname]);
 
+  const closeMobileSidebar = useCallback(() => {
+    setIsSidebarOpenMobile(false);
+  }, []);
+
+  const toggleDesktopSidebar = useCallback(() => {
+    setIsDesktopExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem("blog-sidebar-expanded", String(next));
+      return next;
+    });
+  }, []);
+
   return (
     <>
+      <NavigationEffects siteTitle={siteTitle} />
+      <CardMorphHost />
       <div className="fluent-bg" aria-hidden="true">
-        <div className="fluent-orb fluent-orb-1" />
-        <div className="fluent-orb fluent-orb-2" />
-        <div className="fluent-orb fluent-orb-3" />
-        <div className="fluent-orb fluent-orb-4" />
+        <span className="fluent-orb fluent-wash fluent-wash-1" />
+        <span className="fluent-orb fluent-wash fluent-wash-2" />
+        <span className="fluent-orb fluent-orb-1" />
+        <span className="fluent-orb fluent-orb-2" />
+        <span className="fluent-orb fluent-orb-3" />
+        <span className="fluent-orb fluent-orb-4" />
       </div>
 
       <div
@@ -63,14 +90,8 @@ export default function ClientLayout({
       >
         <Sidebar
           isOpen={isSidebarOpenMobile}
-          onClose={() => setIsSidebarOpenMobile(false)}
-          onToggleDesktop={() =>
-            setIsDesktopExpanded((prev) => {
-              const next = !prev;
-              localStorage.setItem("blog-sidebar-expanded", String(next));
-              return next;
-            })
-          }
+          onClose={closeMobileSidebar}
+          onToggleDesktop={toggleDesktopSidebar}
           isDesktopExpanded={isDesktopExpanded}
           allowMotion={allowMotion}
           siteTitle={siteTitle}
@@ -79,6 +100,7 @@ export default function ClientLayout({
         />
 
         <main
+          className="site-main"
           style={{
             flex: 1,
             display: "flex",
@@ -89,6 +111,7 @@ export default function ClientLayout({
               : "none",
           }}
         >
+          <ReadingProgress />
           <div className="mobile-only-header">
             <Button
               appearance="subtle"
@@ -111,7 +134,7 @@ export default function ClientLayout({
           aria-label="关闭侧边栏"
           aria-hidden={!isSidebarOpenMobile}
           tabIndex={isSidebarOpenMobile ? 0 : -1}
-          onClick={() => setIsSidebarOpenMobile(false)}
+          onClick={closeMobileSidebar}
           className={`mobile-overlay${isSidebarOpenMobile ? " is-open" : ""}`}
         />
       </div>

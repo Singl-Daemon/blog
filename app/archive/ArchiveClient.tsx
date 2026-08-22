@@ -24,28 +24,14 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: "16px",
-    position: "relative",
-    paddingLeft: "32px",
   },
-  yearLine: {
-    position: "absolute",
-    left: "11px",
-    top: "32px",
-    bottom: "-16px",
-    width: "2px",
-    backgroundColor: tokens.colorNeutralStroke2,
-    zIndex: 0,
-  },
-  yearDot: {
-    position: "absolute",
-    left: "6px",
-    top: "10px",
-    width: "12px",
-    height: "12px",
-    borderRadius: "50%",
-    backgroundColor: tokens.colorBrandBackground,
-    border: `2px solid ${tokens.colorNeutralBackground1}`,
-    zIndex: 1,
+  yearTitle: {
+    display: "block",
+    margin: 0,
+    padding: 0,
+    fontSize: "24px",
+    fontWeight: 600,
+    color: tokens.colorBrandForeground1,
   },
   postList: {
     display: "flex",
@@ -123,23 +109,14 @@ export default function ArchiveClient({
             className={`${styles.yearGroup} stagger-in-item`}
             style={{ ["--i" as string]: index } as CSSProperties}
           >
-            <div className={styles.yearDot} />
-            {index !== years.length - 1 && <div className={styles.yearLine} />}
-            <Title3
-              style={{
-                fontSize: "24px",
-                fontWeight: 600,
-                color: tokens.colorBrandForeground1,
-              }}
-            >
-              {year}
-            </Title3>
+            <Title3 className={styles.yearTitle}>{year}</Title3>
             <div className={styles.postList}>
               {grouped[year].map((post) => (
                 <Link
                   key={post.slug}
                   href={`/posts/${post.slug}`}
                   className={styles.link}
+                  data-page-title={post.title}
                 >
                   <div className={`${styles.postItem} soft-hover`}>
                     <div className={styles.date}>

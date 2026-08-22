@@ -4,12 +4,7 @@ import { Dismiss24Regular, List24Regular } from "@fluentui/react-icons";
 import { motion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-}
+import type { TocItem } from "@/lib/posts";
 
 const FAB = 52;
 const PANEL_WIDTH = 300;

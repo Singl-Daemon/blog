@@ -121,10 +121,27 @@ export default function GiscusComments({
   const [origin, setOrigin] = useState("");
   const [commentCount, setCommentCount] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
+  }, []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setInView(true);
+        observer.disconnect();
+      },
+      { rootMargin: "240px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Listen for giscus discussion metadata to get comment count
@@ -155,7 +172,7 @@ export default function GiscusComments({
   if (!repo || !repoId) return null;
 
   return (
-    <section className={styles.root}>
+    <section ref={sectionRef} className={styles.root}>
       <div className={`${styles.card} acrylic-card`}>
         {/* Header */}
         <div className={styles.header}>
@@ -195,21 +212,23 @@ export default function GiscusComments({
             ref={containerRef}
             style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.3s ease" }}
           >
-            <GiscusComponent
-              id="comments"
-              repo={repo as `${string}/${string}`}
-              repoId={repoId}
-              category={category}
-              categoryId={categoryId}
-              mapping={mapping as Mapping}
-              strict={strict as BooleanString}
-              reactionsEnabled={reactionsEnabled as BooleanString}
-              emitMetadata={emitMetadata as BooleanString}
-              inputPosition={inputPosition as InputPosition}
-              theme={giscusTheme}
-              lang={lang}
-              loading="lazy"
-            />
+            {inView ? (
+              <GiscusComponent
+                id="comments"
+                repo={repo as `${string}/${string}`}
+                repoId={repoId}
+                category={category}
+                categoryId={categoryId}
+                mapping={mapping as Mapping}
+                strict={strict as BooleanString}
+                reactionsEnabled={reactionsEnabled as BooleanString}
+                emitMetadata={emitMetadata as BooleanString}
+                inputPosition={inputPosition as InputPosition}
+                theme={giscusTheme}
+                lang={lang}
+                loading="lazy"
+              />
+            ) : null}
           </div>
         </div>
       </div>

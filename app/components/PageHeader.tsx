@@ -10,6 +10,8 @@ import { ArrowLeft24Regular } from "@fluentui/react-icons";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FadeIn } from "@/app/components/FadeIn";
+import { useDocumentTitle } from "@/app/useDocumentTitle";
+import { getClientSiteTitle } from "@/lib/site-title";
 
 const useStyles = makeStyles({
   title: {
@@ -38,14 +40,17 @@ export function PageHeader({
   title,
   description,
   back,
+  documentTitle,
   children,
 }: {
   title: string;
   description?: string;
   back?: { href: string; label: string };
+  documentTitle?: string;
   children?: ReactNode;
 }) {
   const styles = useStyles();
+  useDocumentTitle(documentTitle ?? title, getClientSiteTitle());
 
   return (
     <FadeIn yOffset={16} duration={0.5}>

@@ -56,7 +56,7 @@
     "mapping": "pathname",
     "strict": "0",
     "reactionsEnabled": "1",
-    "emitMetadata": "0",
+    "emitMetadata": "1",
     "inputPosition": "top",
     "lang": "zh-CN"
   }

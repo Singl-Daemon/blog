@@ -41,7 +41,12 @@ export interface SiteConfig {
   };
 }
 
+let cachedSite: SiteConfig | null = null;
+
 export function getSiteConfig(): SiteConfig {
+  if (process.env.NODE_ENV !== "development" && cachedSite) {
+    return cachedSite;
+  }
   const filePath = path.join(contentDir, "site.json");
   const raw = fs.readFileSync(filePath, "utf8");
   const config = JSON.parse(raw) as SiteConfig;
@@ -52,6 +57,7 @@ export function getSiteConfig(): SiteConfig {
   ) as (keyof SiteConfig["favicon"])[]) {
     config.favicon[key] = `${base}${config.favicon[key]}`;
   }
+  cachedSite = config;
   return config;
 }
 
@@ -59,9 +65,18 @@ export interface AboutPageData {
   content: string;
 }
 
+let aboutCache: { mtime: number; data: AboutPageData } | null = null;
+
+export function getAboutMtime() {
+  return fs.statSync(path.join(contentDir, "pages", "about.md")).mtimeMs;
+}
+
 export function getAboutPageData(): AboutPageData {
   const filePath = path.join(contentDir, "pages", "about.md");
+  const mtime = getAboutMtime();
+  if (aboutCache && aboutCache.mtime === mtime) return aboutCache.data;
   const raw = fs.readFileSync(filePath, "utf8");
   const { content } = matter(raw);
-  return { content };
+  aboutCache = { mtime, data: { content } };
+  return aboutCache.data;
 }

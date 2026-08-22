@@ -3,32 +3,66 @@
 import {
   Badge,
   Body1,
+  Button,
   makeStyles,
-  Title1,
   tokens,
 } from "@fluentui/react-components";
 import {
+  ArrowLeft16Regular,
   Calendar24Regular,
   Folder24Regular,
   Tag24Regular,
 } from "@fluentui/react-icons";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { type ReactNode, useEffect, useState } from "react";
-import GiscusComments from "@/app/components/GiscusComments";
-import { TocFab } from "@/app/components/TocFab";
+import { useRouter } from "next/navigation";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useDocumentTitle } from "@/app/useDocumentTitle";
+import {
+  playExpand,
+  snapshotArticleForCollapse,
+  takePendingExpand,
+} from "@/lib/card-morph";
 import { formatDateLong } from "@/lib/date";
+import { scrollWindowInstant } from "@/lib/motion";
+import { isHomeHref, peekReturn } from "@/lib/nav-stack";
+import type { TocItem } from "@/lib/posts";
+import { getClientSiteTitle } from "@/lib/site-title";
+
+const GiscusComments = dynamic(() => import("@/app/components/GiscusComments"), {
+  ssr: false,
+});
+const TocFab = dynamic(
+  () => import("@/app/components/TocFab").then((mod) => mod.TocFab),
+  { ssr: false },
+);
 
 const useStyles = makeStyles({
   header: {
     display: "flex",
     flexDirection: "column",
-    gap: "20px",
+    gap: "16px",
   },
   title: {
+    display: "block",
+    width: "100%",
+    height: "auto",
+    margin: 0,
+    padding: 0,
+    border: 0,
     fontSize: "40px",
     lineHeight: 1.3,
     letterSpacing: "-0.02em",
     fontWeight: 700,
+    textAlign: "left",
+    overflow: "visible",
     "@media (max-width: 768px)": {
       fontSize: "30px",
     },
@@ -45,19 +79,19 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    color: tokens.colorNeutralForeground2,
   },
   metaDivider: {
     width: "4px",
     height: "4px",
     borderRadius: "50%",
-    backgroundColor: tokens.colorNeutralForeground3,
+    backgroundColor: "currentColor",
+    opacity: 0.45,
   },
   metaLink: {
     textDecoration: "none",
     color: "inherit",
     outline: "none",
-    transitionProperty: "color",
+    transitionProperty: "color, opacity",
     transitionDuration: "0.15s",
     display: "flex",
     alignItems: "center",
@@ -86,13 +120,8 @@ const useStyles = makeStyles({
   },
 });
 
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-}
-
 interface PostClientProps {
+  slug: string;
   title: string;
   date: string;
   category?: string;
@@ -114,6 +143,7 @@ interface PostClientProps {
 }
 
 export default function PostClient({
+  slug,
   title,
   date,
   category,
@@ -123,50 +153,85 @@ export default function PostClient({
   children,
 }: PostClientProps) {
   const styles = useStyles();
+  const router = useRouter();
+  const frameRef = useRef<HTMLElement>(null);
+  const playedSlug = useRef<string | null>(null);
   const [activeId, setActiveId] = useState<string>("");
+  const [returnHref, setReturnHref] = useState<string | null>(null);
+  useDocumentTitle(title, getClientSiteTitle());
+
+  useLayoutEffect(() => {
+    setReturnHref(peekReturn(slug)?.href ?? null);
+    scrollWindowInstant(0);
+    if (playedSlug.current === slug) return;
+    const node = frameRef.current;
+    if (!node) return;
+    const pending = takePendingExpand(slug);
+    if (!pending) return;
+    playedSlug.current = slug;
+    playExpand(node, pending);
+  }, [slug]);
+
+  const goBack = useCallback(() => {
+    const dest = returnHref ?? "/";
+    if (isHomeHref(dest) && peekReturn(slug)?.morph) {
+      snapshotArticleForCollapse(slug);
+    }
+    router.replace(dest, { scroll: false });
+  }, [returnHref, router, slug]);
 
   useEffect(() => {
     if (!toc || toc.length === 0) return;
 
-    // Use IntersectionObserver to track which heading is currently in view
+    const headings = toc
+      .map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (headings.length === 0) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
-        });
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length === 0) return;
+        visible.sort(
+          (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+        );
+        setActiveId(visible[0].target.id);
       },
       { rootMargin: "-10% 0px -70% 0px" },
     );
 
-    // Give it a tiny delay to ensure prose content is fully rendered
-    const timeout = setTimeout(() => {
-      document
-        .querySelectorAll(".prose h1, .prose h2, .prose h3, .prose h4")
-        .forEach((el) => {
-          observer.observe(el);
-        });
-    }, 100);
-
-    return () => {
-      clearTimeout(timeout);
-      observer.disconnect();
-    };
+    for (const heading of headings) observer.observe(heading);
+    return () => observer.disconnect();
   }, [toc]);
 
   return (
     <div className="page-shell page-shell-article">
-      <header className={styles.header}>
-        <Title1 as="h1" className={styles.title}>
-          {title}
-        </Title1>
+      <header
+        ref={frameRef}
+        className={`${styles.header} page-header post-header`}
+        data-card-morph-frame=""
+      >
+        <div className="post-back-slot">
+          {returnHref ? (
+            <Button
+              appearance="subtle"
+              size="small"
+              icon={<ArrowLeft16Regular />}
+              className="post-back"
+              onClick={goBack}
+            >
+              返回
+            </Button>
+          ) : null}
+        </div>
 
-        <div className={styles.metaContainer}>
+        <h1 className={styles.title} data-card-morph-title="">
+          {title}
+        </h1>
+
+        <div className={styles.metaContainer} data-card-morph-meta="">
           <div className={styles.metaItem}>
-            <Calendar24Regular
-              style={{ color: tokens.colorBrandForeground1 }}
-            />
+            <Calendar24Regular style={{ color: tokens.colorBrandForeground1 }} />
             <Body1
               style={{
                 fontWeight: 600,
@@ -177,12 +242,13 @@ export default function PostClient({
             </Body1>
           </div>
 
-          {category && (
+          {category ? (
             <>
               <div className={styles.metaDivider} />
               <Link
                 href={`/categories/${encodeURIComponent(category)}`}
                 className={styles.metaLink}
+                data-page-title={`分类: ${category}`}
               >
                 <div className={styles.metaItem} style={{ cursor: "pointer" }}>
                   <Folder24Regular
@@ -192,20 +258,19 @@ export default function PostClient({
                 </div>
               </Link>
             </>
-          )}
+          ) : null}
 
-          {tags && tags.length > 0 && (
+          {tags && tags.length > 0 ? (
             <>
               <div className={styles.metaDivider} />
               <div className={styles.tags}>
-                <Tag24Regular
-                  style={{ color: tokens.colorBrandForeground1 }}
-                />
+                <Tag24Regular style={{ color: tokens.colorBrandForeground1 }} />
                 {tags.map((tag) => (
                   <Link
                     key={tag}
                     href={`/tags/${encodeURIComponent(tag)}`}
                     className={styles.tagLink}
+                    data-page-title={`标签: ${tag}`}
                   >
                     <Badge
                       appearance="outline"
@@ -220,15 +285,15 @@ export default function PostClient({
                 ))}
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </header>
+      <hr className="page-header-rule" />
 
-      <main className={styles.content}>
+      <main className={`${styles.content} post-article-body`}>
         <div className="prose">{children}</div>
       </main>
       <GiscusComments {...giscus} />
-
       {toc && toc.length > 0 ? <TocFab toc={toc} activeId={activeId} /> : null}
     </div>
   );

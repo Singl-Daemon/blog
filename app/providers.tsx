@@ -9,8 +9,10 @@ import {
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { flushSync } from "react-dom";
@@ -57,14 +59,25 @@ function applyDocumentTheme(themeName: "light" | "dark") {
 }
 
 function withThemeTransition(update: () => void) {
-  const start = document.startViewTransition?.bind(document);
-  if (typeof start === "function") {
-    start(() => {
-      flushSync(update);
-    });
+  document.activeViewTransition?.skipTransition();
+  if (typeof document.startViewTransition !== "function") {
+    update();
     return;
   }
-  update();
+
+  const run = () => {
+    flushSync(update);
+  };
+
+  const start = document.startViewTransition.bind(document) as (
+    cb: (() => void) | { update: () => void; types?: string[] },
+  ) => unknown;
+
+  if (CSS.supports("selector(:active-view-transition-type(theme))")) {
+    start({ update: run, types: ["theme"] });
+    return;
+  }
+  start(run);
 }
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -91,7 +104,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const next = themeName === "light" ? "dark" : "light";
     localStorage.setItem(THEME_KEY, next);
     withThemeTransition(() => {
@@ -99,18 +112,18 @@ export default function Providers({ children }: { children: ReactNode }) {
       setThemeName(next);
       applyDocumentTheme(next);
     });
-  };
+  }, [themeName]);
 
-  const setTheme = (t: "light" | "dark") => {
+  const setTheme = useCallback((t: "light" | "dark") => {
     localStorage.setItem(THEME_KEY, t);
     withThemeTransition(() => {
       setIsOverride(true);
       setThemeName(t);
       applyDocumentTheme(t);
     });
-  };
+  }, []);
 
-  const resetTheme = () => {
+  const resetTheme = useCallback(() => {
     localStorage.removeItem(THEME_KEY);
     const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const next = dark ? "dark" : "light";
@@ -119,24 +132,26 @@ export default function Providers({ children }: { children: ReactNode }) {
       setThemeName(next);
       applyDocumentTheme(next);
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (mounted) applyDocumentTheme(themeName);
   }, [themeName, mounted]);
 
   const themeToApply = themeName === "dark" ? darkTheme : lightTheme;
+  const themeValue = useMemo(
+    () => ({
+      theme: themeName,
+      toggleTheme,
+      setTheme,
+      resetTheme,
+      isOverride,
+    }),
+    [themeName, toggleTheme, setTheme, resetTheme, isOverride],
+  );
 
   return (
-    <ThemeContext.Provider
-      value={{
-        theme: themeName,
-        toggleTheme,
-        setTheme,
-        resetTheme,
-        isOverride,
-      }}
-    >
+    <ThemeContext.Provider value={themeValue}>
       <FluentProvider
         theme={themeToApply}
         style={{

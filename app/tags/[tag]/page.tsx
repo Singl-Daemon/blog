@@ -1,5 +1,15 @@
+import { pageMetadata } from "@/lib/metadata";
 import { getAllTags, getPostsByTag } from "@/lib/posts";
 import TagPostsClient from "./TagPostsClient";
+
+export async function generateMetadata(props: {
+  params: Promise<{ tag: string }>;
+}) {
+  const params = await props.params;
+  const tag = decodeURIComponent(params.tag);
+  const posts = getPostsByTag(tag);
+  return pageMetadata(`标签: ${tag}`, `共 ${posts.length} 篇文章`);
+}
 
 export async function generateStaticParams() {
   const tags = getAllTags();
