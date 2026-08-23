@@ -23,7 +23,11 @@
         "label": "QQ 群",
         "url": "https://qm.qq.com/q/Tp7GR3w8s8"
       },
-      { "type": "email", "label": "Email", "url": "mailto:std@singl.top" }
+      {
+        "type": "email",
+        "label": "Email",
+        "url": "mailto:std@singl.top"
+      }
     ]
   },
   "pages": {
